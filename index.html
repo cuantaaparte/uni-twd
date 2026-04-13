@@ -33,7 +33,7 @@
             
             <section class="panel" id="panel-salidas">
                 <h2>🛫 Salidas</h2>
-                <div class="tabla-header">
+                <div class="tabla-header" id="header-salidas">
                     <span>Hora</span>
                     <span>Código</span>
                     <span>Destino</span>
@@ -46,7 +46,7 @@
 
             <section class="panel" id="panel-llegadas">
                 <h2>🛬 Llegadas</h2>
-                <div class="tabla-header">
+                <div class="tabla-header" id="header-salidas">
                     <span>Hora</span>
                     <span>Código</span>
                     <span>Origen</span>
@@ -75,6 +75,97 @@
                     <input type="password" id="auth-password" required placeholder="••••••••">
                 </div>
                 <button type="submit" id="auth-submit" class="btn-full">Confirmar</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="modal-operacion" class="modal-overlay hidden">
+        <div class="modal-content">
+            <span id="close-modal-op" class="close">&times;</span>
+            <h2 id="modal-op-title">✏️ Editar Operación</h2>
+            
+            <form id="form-operacion">
+                <input type="hidden" id="op-id">
+                
+                <div class="form-group">
+                    <label>Estado</label>
+                    <select id="op-estado" required>
+                        <option value="PROGRAMADO">Programado</option>
+                        <option value="RETRASADO">Retrasado</option>
+                        <option value="CANCELADO">Cancelado</option>
+                        <option value="EMBARCANDO">Embarcando</option>
+                        <option value="EN_RUTA">En Ruta</option>
+                        <option value="LLEGADO">Llegado</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Operador</label>
+                    <select id="op-operador" required>
+                        </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Puerta / Vía</label>
+                    <select id="op-punto" required>
+                        </select>
+                </div>
+
+                <button type="submit" class="btn-full">Guardar Cambios</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="modal-crear" class="modal-overlay hidden">
+        <div class="modal-content">
+            <span id="close-modal-crear" class="close">&times;</span>
+            <h2 id="modal-crear-title">➕ Nueva Operación</h2>
+            
+            <form id="form-crear">
+                <div class="form-group">
+                    <label>Tipo</label>
+                    <select id="crear-tipo" required>
+                        <option value="vuelo">Vuelo ✈️</option>
+                        <option value="tren">Tren 🚂</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Código (ej. IB999)</label>
+                    <input type="text" id="crear-codigo" required placeholder="Código del transporte">
+                </div>
+
+                <div class="form-group">
+                    <label>Sentido</label>
+                    <select id="crear-sentido" required>
+                        <option value="salida">Salida 🛫</option>
+                        <option value="llegada">Llegada 🛬</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label id="label-ciudad">Destino</label>
+                    <input type="text" id="crear-ciudad" required placeholder="Ciudad">
+                </div>
+
+                <div class="form-group">
+                    <label>Hora Programada</label>
+                    <input type="datetime-local" id="crear-hora" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Operador</label>
+                    <select id="crear-operador" required>
+                        </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Puerta / Vía</label>
+                    <select id="crear-punto" required>
+                        </select>
+                </div>
+
+                <button type="submit" class="btn-full" style="background-color: #2ecc71;">Crear Operación</button>
             </form>
         </div>
     </div>
