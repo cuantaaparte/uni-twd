@@ -35,11 +35,18 @@ export function inicializarDatos(){
     ]
 
     //operaciones
-    const ahora = new Date().getTime();
+    const ahora = Date.now();
     const operaciones = [
-        new Operacion(TIPOS_OPERACION.VUELO, "IB1234", SENTIDOS.SALIDA, "Madrid", "París", ahora+7200000, 1, 1),
-        new Operacion(TIPOS_OPERACION.TREN, "AVE1234", SENTIDOS.LLEGADA, "Sevilla", "Madrid", ahora - 3600000, 2, 2)
+        new Operacion(TIPOS_OPERACION.VUELO, "IB1234", SENTIDOS.SALIDA, "Madrid", "París", ahora + 7200000, 1, 1),
+        new Operacion(TIPOS_OPERACION.TREN, "AVE1234", SENTIDOS.LLEGADA, "Sevilla", "Madrid", ahora - 3600000, 2, 2),
+        // 🆕 Añadimos estos dos para probar filtros y colores
+        new Operacion(TIPOS_OPERACION.VUELO, "RYN88", SENTIDOS.SALIDA, "Madrid", "Dublín", ahora + 1000000, 1, 1),
+        new Operacion(TIPOS_OPERACION.TREN, "OUIGO33", SENTIDOS.LLEGADA, "Valencia", "Madrid", ahora, 2, 2)
     ];
+
+    // Forzamos cambios de estado para las pruebas
+    operaciones[2].cambiarEstado("RETRASADO");
+    operaciones[3].cambiarEstado("EMBARCANDO");
 
     /*
         GUARDADO EN LOCALSTORAGE

@@ -135,3 +135,52 @@ header {
         flex: 1; /* Ambos paneles ocupan el mismo ancho */
     }
 }
+
+/* 🏷️ ESTILO GENERAL DE LAS ETIQUETAS */
+.estado-tag {
+    padding: 5px 10px;
+    border-radius: 15px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    color: white; /* Texto blanco para todos */
+    text-transform: uppercase;
+    display: inline-block;
+    text-align: center;
+    min-width: 100px;
+}
+
+/* 🚦 COLORES SEGÚN EL ESTADO */
+.state-programado {
+    background-color: #2ecc71; /* Verde esmeralda */
+}
+
+.state-retrasado {
+    background-color: #f1c40f; /* Amarillo girasol */
+    color: #333; /* Texto oscuro para que se lea bien el amarillo */
+}
+
+.state-cancelado {
+    background-color: #e74c3c; /* Rojo alizarina */
+}
+
+.state-embarcando {
+    background-color: #9b59b6; /* Morado amatista */
+}
+
+.state-en_ruta {
+    background-color: #3498db; /* Azul belice */
+}
+
+.state-llegado {
+    background-color: #95a5a6; /* Gris concreto */
+}
+
+.state-embarcando {
+    animation: parpadeo 1.5s infinite;
+}
+
+@keyframes parpadeo {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
