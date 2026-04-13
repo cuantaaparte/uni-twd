@@ -1,5 +1,3 @@
-// js/views/TableroView.js
-
 export class TableroView {
     constructor() {
         this.listaSalidas = document.getElementById("lista-salidas");
@@ -32,10 +30,10 @@ export class TableroView {
     }
 
     generarFilaHTML(operacion, operador, punto, esGestor) {
-        // --- 📅 LÓGICA DE FECHAS (Hoy, Mañana, Otros) --- 
+        // ---  LÓGICA DE FECHAS (Hoy, Mañana, Otros) --- 
         const fechaOperacion = new Date(operacion.horaProgramada);
         
-        // 🔴 Comprobar si la fecha es pasada (para poner en rojo)
+        //  Comprobar si la fecha es pasada (para poner en rojo)
         const timestampOperacion = fechaOperacion.getTime();
         const esPasada = timestampOperacion < Date.now();
         // En vez de clase de CSS, inyectamos el estilo directo rojo brillante si es pasada
@@ -65,7 +63,7 @@ export class TableroView {
             textoFechaHora = formatoSoloFecha; 
         }
 
-        // --- 🟧 LÓGICA DE ICONOS Y EMOJIS ---
+        // ---  LÓGICA DE ICONOS Y EMOJIS ---
         const urlIcono = operador ? operador.urlIcono : "🟧";
         const siglasOperador = operador ? operador.siglas : "N/A";
         

@@ -1,5 +1,3 @@
-// js/main.js
-
 import { inicializarDatos } from "./data/seed.js";
 import { TableroView } from "./views/TableroView.js";
 import { AuthView } from "./views/AuthView.js";
@@ -30,9 +28,9 @@ const normalizarIdColumna = (textoColumna) => {
 };
 
 document.addEventListener("DOMContentLoaded", () => {
-    // --- 🌓 LÓGICA DEL MODO OSCURO ---
+    // ---  LÓGICA DEL MODO OSCURO ---
     const botonTema = document.getElementById("checkbox-theme");
-    // 🌙 Default a 'dark' si el usuario es nuevo
+    //  Default a 'dark' si el usuario es nuevo
     const temaGuardado = localStorage.getItem("tema") || "dark";
 
     // 1. Aplicar estado inicial
@@ -197,7 +195,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if(selectEstado) selectEstado.addEventListener("change", aplicarFiltros);
 
     /* =========================================
-       🔐 LÓGICA DE AUTENTICACIÓN
+        LÓGICA DE AUTENTICACIÓN
        ========================================= */
     document.getElementById("btn-login")?.addEventListener("click", () => authView.show(false));
     document.getElementById("btn-signup")?.addEventListener("click", () => authView.show(true));
@@ -242,7 +240,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     /* =========================================
-       ✨ INTERACTIVIDAD TABLA (Delegación Principal)
+        INTERACTIVIDAD TABLA (Delegación Principal)
        ========================================= */
     document.getElementById("close-modal-detalle")?.addEventListener("click", () => document.getElementById("modal-detalle").classList.add("hidden"));
 
@@ -276,7 +274,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 return;
             }
 
-            // 🗑️ BORRAR OPERACIÓN
+            //  BORRAR OPERACIÓN
             const botonBorrarOperacion = eventoClic.target.closest(".btn-borrar");
             if (botonBorrarOperacion) {
                 const idOperacionEliminar = botonBorrarOperacion.getAttribute("data-id");
@@ -288,7 +286,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 return;
             }
 
-            // ✏️ EDITAR OPERACIÓN
+            //  EDITAR OPERACIÓN
             const botonEditarOperacion = eventoClic.target.closest(".btn-editar");
             if (botonEditarOperacion) {
                 const idOperacionEditar = botonEditarOperacion.getAttribute("data-id");
@@ -310,7 +308,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 return;
             }
 
-            // 🔍 VISTA DETALLE DE OPERACIÓN
+            //  VISTA DETALLE DE OPERACIÓN
             const filaTablaClicada = eventoClic.target.closest(".operacion-row");
             if (filaTablaClicada && !eventoClic.target.closest(".acciones-gestor")) { 
                 const idOperacionDetalle = filaTablaClicada.getAttribute("data-id");
@@ -349,7 +347,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     /* =========================================
-       ➕ FORMULARIOS DE OPERACIONES
+        FORMULARIOS DE OPERACIONES
        ========================================= */
     document.getElementById("close-modal-op")?.addEventListener("click", () => document.getElementById("modal-operacion").classList.add("hidden"));
     
@@ -402,7 +400,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     /* =========================================
-       👥 GESTIÓN DE USUARIOS, OPERADORES Y PUNTOS
+        GESTIÓN DE USUARIOS, OPERADORES Y PUNTOS
        ========================================= */
     document.getElementById("close-modal-usuarios")?.addEventListener("click", () => document.getElementById("modal-usuarios").classList.add("hidden"));
     document.getElementById("close-modal-operadores")?.addEventListener("click", () => document.getElementById("modal-operadores").classList.add("hidden"));

@@ -1,5 +1,5 @@
 /* =========================================
-   🎨 1. VARIABLES DE TEMA (CLEAN CODE)
+    1. VARIABLES DE TEMA (CLEAN CODE)
    ========================================= */
 
 /* Tema Claro (Por Defecto) */
@@ -78,7 +78,7 @@ body.dark-mode {
 
 
 /* =========================================
-   🌐 2. BASE Y RESET
+    2. BASE Y RESET
    ========================================= */
 * {
     box-sizing: border-box;
@@ -97,7 +97,7 @@ body {
 
 
 /* =========================================
-   🔝 3. UI GLOBAL Y CABECERA
+    3. UI GLOBAL Y CABECERA
    ========================================= */
 header {
     background-color: var(--primary-dark);
@@ -214,7 +214,7 @@ input:checked + .slider:before { transform: translateX(28px); }
 
 
 /* =========================================
-   📐 4. LAYOUT Y PANELES
+    4. LAYOUT Y PANELES
    ========================================= */
 .filtros {
     display: flex;
@@ -252,7 +252,7 @@ input:checked + .slider:before { transform: translateX(28px); }
 
 
 /* =========================================
-   📊 5. TABLAS (GRID Y CENTRADO)
+    5. TABLAS (GRID Y CENTRADO)
    ========================================= */
 .tabla-header, .operacion-row {
     display: grid;
@@ -313,7 +313,7 @@ input:checked + .slider:before { transform: translateX(28px); }
 
 
 /* =========================================
-   🏷️ 6. ETIQUETAS DE ESTADO
+    6. ETIQUETAS DE ESTADO
    ========================================= */
 .estado-tag {
     padding: 0 10px; /* Quitamos el padding vertical para usar height */
@@ -346,7 +346,7 @@ input:checked + .slider:before { transform: translateX(28px); }
 
 
 /* =========================================
-   🗔 7. MODALES Y FORMULARIOS
+    7. MODALES Y FORMULARIOS
    ========================================= */
 .hidden { display: none !important; }
 
@@ -448,7 +448,7 @@ select option {
 
 
 /* =========================================
-   📱 8. MEDIA QUERIES (RESPONSIVE)
+    8. MEDIA QUERIES (RESPONSIVE)
    ========================================= */
 @media (max-width: 768px) {
     .tabla-header, .operacion-row {
