@@ -170,6 +170,22 @@
         </div>
     </div>
 
+    <div id="modal-usuarios" class="modal-overlay hidden">
+        <div class="modal-content" style="max-width: 600px;">
+            <span id="close-modal-usuarios" class="close">&times;</span>
+            <h2 style="text-align: left; margin-bottom: 20px;">👥 Gestión de Usuarios</h2>
+            
+            <div class="tabla-header" style="grid-template-columns: 2fr 1fr 1.5fr;">
+                <span>Email</span>
+                <span>Rol Actual</span>
+                <span>Acción</span>
+            </div>
+            
+            <div id="lista-usuarios" class="tabla-cuerpo" style="max-height: 350px; overflow-y: auto;">
+                </div>
+        </div>
+    </div>
+
     <script type="module" src="./js/main.js"></script>
 </body>
 </html>

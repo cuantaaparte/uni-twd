@@ -35,9 +35,8 @@ document.addEventListener("DOMContentLoaded", () => {
     let usuarioActivo = JSON.parse(sessionStorage.getItem("usuarioActivo"));
     authView.renderAuthButtons(usuarioActivo);
 
-    // 2. Función maestra de filtrado (Actualizada para recibir usuarioActivo)
+    // 2. Función maestra de filtrado
     const aplicarFiltros = () => {
-        // Extraemos las operaciones cada vez que filtramos por si se ha borrado alguna
         let operacionesActuales = JSON.parse(localStorage.getItem("operaciones")) || [];
         
         const textoCriterio = inputBusqueda.value.toLowerCase();
@@ -45,24 +44,21 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Filtramos el array
         const operacionesFiltradas = operacionesActuales.filter(op => {
-            // Regla 1: ¿Coincide el código?
             const coincideCodigo = op.codigo.toLowerCase().includes(textoCriterio);
-            
-            // Regla 2: ¿Coincide el estado? (Si es "TODOS", pasa siempre)
             const coincideEstado = estadoCriterio === "TODOS" || op.estado === estadoCriterio;
-
             return coincideCodigo && coincideEstado;
         });
 
-        // Volvemos a pintar con los resultados del filtro Y le pasamos el usuario activo
+        // Volvemos a pintar
         tablero.render(operacionesFiltradas, operadores, puntos, usuarioActivo);
 
-        // 🆕 Inyectar botón de "Nueva Operación" si es Gestor
+        // 🆕 Inyectar botones de Gestión si es GESTOR
         const contenedorFiltros = document.querySelector(".filtros");
         let btnNuevo = document.getElementById("btn-nueva-operacion");
+        let btnUsuarios = document.getElementById("btn-gestionar-usuarios");
         
         if (usuarioActivo && usuarioActivo.rol === "GESTOR") {
-            if (!btnNuevo) { // Si no existe, lo creamos
+            if (!btnNuevo) {
                 btnNuevo = document.createElement("button");
                 btnNuevo.id = "btn-nueva-operacion";
                 btnNuevo.className = "btn-primary";
@@ -71,29 +67,34 @@ document.addEventListener("DOMContentLoaded", () => {
                 btnNuevo.innerText = "➕ Nueva Operación";
                 contenedorFiltros.appendChild(btnNuevo);
             }
+            if (!btnUsuarios) {
+                btnUsuarios = document.createElement("button");
+                btnUsuarios.id = "btn-gestionar-usuarios";
+                btnUsuarios.className = "btn-secondary";
+                btnUsuarios.style.marginLeft = "10px";
+                btnUsuarios.innerText = "👥 Usuarios";
+                contenedorFiltros.appendChild(btnUsuarios);
+            }
         } else {
-            if (btnNuevo) btnNuevo.remove(); // Si no es gestor y existe, lo borramos
+            if (btnNuevo) btnNuevo.remove();
+            if (btnUsuarios) btnUsuarios.remove();
         }
     };
 
-    // 3. Conectamos los eventos de los filtros
+    // 3. Conectamos los eventos
     inputBusqueda.addEventListener("input", aplicarFiltros);
     selectEstado.addEventListener("change", aplicarFiltros);
-
-    // Pintado inicial
-    aplicarFiltros();
+    aplicarFiltros(); // Pintado inicial
 
 
     /* =========================================
-        🔐 LÓGICA DE LOGIN Y REGISTRO
+       🔐 LÓGICA DE LOGIN Y REGISTRO
        ========================================= */
 
-    // Eventos para abrir el modal
     document.getElementById("btn-login").addEventListener("click", () => authView.show(false));
     document.getElementById("btn-signup").addEventListener("click", () => authView.show(true));
     document.getElementById("close-modal").addEventListener("click", () => authView.hide());
 
-    // Manejar el envío del formulario
     document.getElementById("auth-form").addEventListener("submit", (e) => {
         e.preventDefault();
         const email = document.getElementById("auth-email").value;
@@ -110,9 +111,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 authView.hide();
                 authView.renderAuthButtons(usuarioActivo);
                 alert("¡Bienvenido!");
-                
-                // 🆕 Recargamos el tablero para que aparezcan los botones de Gestor si lo es
-                aplicarFiltros();
+                aplicarFiltros(); // Refrescamos para inyectar los botones de admin
             } else {
                 alert("Credenciales incorrectas ❌");
             }
@@ -126,36 +125,33 @@ document.addEventListener("DOMContentLoaded", () => {
             usuariosCargados.push(nuevoUsuario);
             localStorage.setItem("usuarios", JSON.stringify(usuariosCargados));
             alert("Cuenta creada. Ahora puedes loguearte.");
-            authView.show(false); // Pasamos a modo login
+            authView.show(false); 
         }
     });
 
-    // Lógica de Logout
     document.getElementById("btn-logout").addEventListener("click", () => {
         sessionStorage.removeItem("usuarioActivo");
         usuarioActivo = null;
         authView.renderAuthButtons(null);
         alert("Sesión cerrada 👋");
-        location.reload(); // Recargamos para limpiar la vista y quitar los botones de Gestor
+        location.reload(); 
     });
 
 
     /* =========================================
-        🛠️ LÓGICA DE GESTIÓN (EDITAR Y BORRAR)
+       🛠️ LÓGICA DE GESTIÓN (EDITAR Y BORRAR)
        ========================================= */
     
     const modalOp = document.getElementById("modal-operacion");
     const formOp = document.getElementById("form-operacion");
 
-    // Cerrar el modal de edición
     document.getElementById("close-modal-op").addEventListener("click", () => {
         modalOp.classList.add("hidden");
     });
 
-    // 1. Escuchamos los clics en los botones de las tablas
     document.querySelector(".tableros-container").addEventListener("click", (e) => {
         
-        // 👉 SI HACEN CLIC EN BORRAR 🗑️
+        // 👉 BORRAR
         if (e.target.classList.contains("btn-borrar")) {
             const idOperacion = e.target.getAttribute("data-id");
             if (confirm("⚠️ ¿Estás seguro de que quieres eliminar esta operación?")) {
@@ -166,52 +162,38 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         }
 
-        // 👉 SI HACEN CLIC EN EDITAR ✏️
+        // 👉 EDITAR
         if (e.target.classList.contains("btn-editar")) {
             const idOperacion = e.target.getAttribute("data-id");
             let operacionesGuardadas = JSON.parse(localStorage.getItem("operaciones")) || [];
-            
-            // Buscamos los datos actuales de ese vuelo/tren
             const opToEdit = operacionesGuardadas.find(op => op.operacionId === idOperacion);
 
             if (opToEdit) {
-                // Rellenamos el ID oculto y el estado
                 document.getElementById("op-id").value = opToEdit.operacionId;
                 document.getElementById("op-estado").value = opToEdit.estado;
 
-                // Generamos dinámicamente las opciones de Operadores
                 const selectOperador = document.getElementById("op-operador");
                 selectOperador.innerHTML = operadores.map(o => 
-                    `<option value="${o.operadorId}" ${o.operadorId === opToEdit.operadorId ? 'selected' : ''}>
-                        ${o.nombre}
-                    </option>`
+                    `<option value="${o.operadorId}" ${o.operadorId === opToEdit.operadorId ? 'selected' : ''}>${o.nombre}</option>`
                 ).join("");
 
-                // Generamos dinámicamente las opciones de Puntos (Puertas/Vías)
                 const selectPunto = document.getElementById("op-punto");
                 selectPunto.innerHTML = puntos.map(p => 
-                    `<option value="${p.puntoId}" ${p.puntoId === opToEdit.puntoId ? 'selected' : ''}>
-                        ${p.codigo}
-                    </option>`
+                    `<option value="${p.puntoId}" ${p.puntoId === opToEdit.puntoId ? 'selected' : ''}>${p.codigo}</option>`
                 ).join("");
 
-                // ¡Abrimos el modal!
                 modalOp.classList.remove("hidden");
             }
         }
     });
 
-    // 2. Guardar los cambios del formulario de Edición
     formOp.addEventListener("submit", (e) => {
-        e.preventDefault(); // Evitamos que la página se recargue
-
-        // Capturamos los nuevos valores del formulario
+        e.preventDefault();
         const idEditado = document.getElementById("op-id").value;
         const nuevoEstado = document.getElementById("op-estado").value;
         const nuevoOperadorId = parseInt(document.getElementById("op-operador").value);
         const nuevoPuntoId = parseInt(document.getElementById("op-punto").value);
 
-        // Traemos el array, lo modificamos y lo volvemos a guardar
         let operacionesGuardadas = JSON.parse(localStorage.getItem("operaciones")) || [];
         const index = operacionesGuardadas.findIndex(op => op.operacionId === idEditado);
 
@@ -219,38 +201,36 @@ document.addEventListener("DOMContentLoaded", () => {
             operacionesGuardadas[index].estado = nuevoEstado;
             operacionesGuardadas[index].operadorId = nuevoOperadorId;
             operacionesGuardadas[index].puntoId = nuevoPuntoId;
-
             localStorage.setItem("operaciones", JSON.stringify(operacionesGuardadas));
             
-            // Cerramos modal y repintamos
             modalOp.classList.add("hidden");
             aplicarFiltros(); 
-            console.log("✅ Operación actualizada con éxito");
+            console.log("✅ Operación actualizada");
         }
     });
 
+
     /* =========================================
-        ➕ LÓGICA DE GESTIÓN (CREAR OPERACIÓN)
+       ➕ LÓGICA DE GESTIÓN (CREAR OPERACIÓN)
        ========================================= */
 
     const modalCrear = document.getElementById("modal-crear");
     const formCrear = document.getElementById("form-crear");
 
-    // Cerrar el modal de creación
     document.getElementById("close-modal-crear").addEventListener("click", () => {
         modalCrear.classList.add("hidden");
     });
 
-    // Cambiar la etiqueta "Destino" u "Origen" según lo que elijamos en "Sentido"
     document.getElementById("crear-sentido").addEventListener("change", (e) => {
         const label = document.getElementById("label-ciudad");
         label.innerText = e.target.value === "salida" ? "Destino" : "Origen";
     });
 
-    // Escuchamos el botón (que añadiremos por JS para que solo lo vea el gestor)
+    // Delegamos los clics de la cabecera al document.body
     document.body.addEventListener("click", (e) => {
+        
+        // ABRIR MODAL CREAR
         if (e.target.id === "btn-nueva-operacion") {
-            // Rellenar dinámicamente los selectores de Operador y Punto
             const selectOp = document.getElementById("crear-operador");
             selectOp.innerHTML = operadores.map(o => `<option value="${o.operadorId}">${o.nombre}</option>`).join("");
             
@@ -261,45 +241,37 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    // Guardar la NUEVA Operación
     formCrear.addEventListener("submit", (e) => {
         e.preventDefault();
-
-        // 1. Recogemos todos los valores
         const tipo = document.getElementById("crear-tipo").value;
         const codigo = document.getElementById("crear-codigo").value;
         const sentido = document.getElementById("crear-sentido").value;
         const ciudad = document.getElementById("crear-ciudad").value;
-        const hora = new Date(document.getElementById("crear-hora").value).getTime(); // Convertimos a milisegundos
+        const hora = new Date(document.getElementById("crear-hora").value).getTime(); 
         const operadorId = parseInt(document.getElementById("crear-operador").value);
         const puntoId = parseInt(document.getElementById("crear-punto").value);
 
-        // Validaciones extra:
         if (isNaN(hora)) {
             alert("Por favor, selecciona una fecha y hora válidas.");
             return;
         }
 
-        // 2. Creamos la estructura simulando la clase Operacion (ya que estamos en main)
         const nuevaOperacion = {
-            operacionId: generarULID(), // ¡Usamos nuestra función!
+            operacionId: generarULID(), 
             tipo: tipo,
             codigo: codigo,
             sentido: sentido,
-            // Asignamos a origen o destino dependiendo del sentido
-            origen: sentido === "llegada" ? ciudad : "Madrid", // Suponemos que Madrid es la base
+            origen: sentido === "llegada" ? ciudad : "Madrid", 
             destino: sentido === "salida" ? ciudad : "Madrid",
             horaProgramada: hora,
             horaEstimada: hora,
-            estado: "PROGRAMADO", // Por defecto
+            estado: "PROGRAMADO", 
             operadorId: operadorId,
             puntoId: puntoId
         };
 
-        // 3. Guardamos en LocalStorage
         let operacionesGuardadas = JSON.parse(localStorage.getItem("operaciones")) || [];
         
-        // Verificamos que el código no exista ya
         if(operacionesGuardadas.some(op => op.codigo.toUpperCase() === codigo.toUpperCase())){
             alert("⚠️ Ya existe una operación con ese código.");
             return;
@@ -308,10 +280,86 @@ document.addEventListener("DOMContentLoaded", () => {
         operacionesGuardadas.push(nuevaOperacion);
         localStorage.setItem("operaciones", JSON.stringify(operacionesGuardadas));
 
-        // 4. Cerramos modal, limpiamos y repintamos
         formCrear.reset();
         modalCrear.classList.add("hidden");
         aplicarFiltros();
-        console.log("✅ Nueva operación creada con éxito:", nuevaOperacion.codigo);
+        console.log("✅ Nueva operación creada");
+    });
+
+
+    /* =========================================
+       👥 LÓGICA DE GESTIÓN DE USUARIOS
+       ========================================= */
+
+    const modalUsuarios = document.getElementById("modal-usuarios");
+    const listaUsuariosHTML = document.getElementById("lista-usuarios");
+
+    document.getElementById("close-modal-usuarios").addEventListener("click", () => {
+        modalUsuarios.classList.add("hidden");
+    });
+
+    function renderizarUsuarios() {
+        let usuariosGuardados = JSON.parse(localStorage.getItem("usuarios")) || [];
+        
+        listaUsuariosHTML.innerHTML = usuariosGuardados.map(u => {
+            let btnHtml = "";
+            let colorRol = u.rol === "GESTOR" ? "#2ecc71" : "#95a5a6"; 
+
+            if (u.rol === "GESTOR") {
+                btnHtml = `<button class="btn-cambiar-rol" data-email="${u.email}" data-rol="PÚBLICO" style="background: #e74c3c; color: white; padding: 6px 12px; border:none; border-radius:4px; cursor:pointer; width: 100%;">Degradar ⬇️</button>`;
+            } else {
+                btnHtml = `<button class="btn-cambiar-rol" data-email="${u.email}" data-rol="GESTOR" style="background: #3498db; color: white; padding: 6px 12px; border:none; border-radius:4px; cursor:pointer; width: 100%;">Ascender ⬆️</button>`;
+            }
+
+            return `
+                <div style="display: grid; grid-template-columns: 2fr 1fr 1.5fr; padding: 12px; border-bottom: 1px solid var(--border-color); align-items: center;">
+                    <span style="font-weight: bold;">${u.email}</span>
+                    <span style="color: ${colorRol}; font-weight: bold; font-size: 0.8rem;">${u.rol}</span>
+                    <div>${btnHtml}</div>
+                </div>
+            `;
+        }).join("");
+    }
+
+    // Delegamos los clics de gestión de usuarios al body
+    document.body.addEventListener("click", (e) => {
+        
+        // ABRIR MODAL USUARIOS
+        if (e.target.id === "btn-gestionar-usuarios") {
+            renderizarUsuarios();
+            modalUsuarios.classList.remove("hidden");
+        }
+
+        // BOTONES ASCENDER/DEGRADAR
+        if (e.target.classList.contains("btn-cambiar-rol")) {
+            const emailToChange = e.target.getAttribute("data-email");
+            const nuevoRol = e.target.getAttribute("data-rol");
+            
+            let usuariosGuardados = JSON.parse(localStorage.getItem("usuarios")) || [];
+
+            // Regla para evitar borrar al último Gestor
+            if (nuevoRol === "PÚBLICO") {
+                const gestoresTotales = usuariosGuardados.filter(u => u.rol === "GESTOR").length;
+                if (gestoresTotales <= 1) {
+                    alert("⚠️ ALERTA: No puedes degradar al último Gestor. El sistema se quedaría sin administradores.");
+                    return;
+                }
+            }
+
+            const index = usuariosGuardados.findIndex(u => u.email === emailToChange);
+            if (index !== -1) {
+                usuariosGuardados[index].rol = nuevoRol;
+                localStorage.setItem("usuarios", JSON.stringify(usuariosGuardados));
+
+                // Suicidio admin
+                if (emailToChange === usuarioActivo.email && nuevoRol === "PÚBLICO") {
+                    alert("Te has revocado los permisos de Gestor a ti mismo. Se cerrará la sesión.");
+                    document.getElementById("btn-logout").click();
+                    return;
+                }
+
+                renderizarUsuarios(); 
+            }
+        }
     });
 });
