@@ -30,6 +30,35 @@ const normalizarIdColumna = (textoColumna) => {
 };
 
 document.addEventListener("DOMContentLoaded", () => {
+    // --- 🌓 LÓGICA DEL MODO OSCURO ---
+    const botonTema = document.getElementById("checkbox-theme");
+    const temaGuardado = localStorage.getItem("tema");
+
+    // 1. Mirar la mochila: ¿Teníamos el modo oscuro activado antes?
+    if (temaGuardado === "dark") {
+        document.body.classList.add("dark-mode");
+        if (botonTema) botonTema.checked = false; // Ajustamos la bolita visualmente
+    } else {
+        // Por defecto lo ponemos en día
+        if (botonTema) botonTema.checked = true;
+    }
+
+    // 2. Escuchar clics en el botón
+    if (botonTema) {
+        botonTema.addEventListener("change", (evento) => {
+            if (!evento.target.checked) {
+                // Modo Noche
+                document.body.classList.add("dark-mode");
+                localStorage.setItem("tema", "dark");
+            } else {
+                // Modo Día
+                document.body.classList.remove("dark-mode");
+                localStorage.setItem("tema", "light");
+            }
+        });
+    }
+
+    
     console.log("Sistema iniciado...");
     inicializarDatos();
 

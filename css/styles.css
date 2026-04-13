@@ -428,3 +428,134 @@ select option {
 .acciones-gestor {
     cursor: default;
 }
+
+/* =========================================
+   🌓 ANIMACIÓN DEL BOTÓN DARK MODE
+   ========================================= */
+.theme-switch {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 32px;
+    margin-right: 20px; /* Separación con los botones de login */
+}
+
+.theme-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: #34495e; /* Fondo modo oscuro (Noche) */
+    transition: 0.4s;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 6px;
+    box-sizing: border-box;
+}
+
+.slider.round {
+    border-radius: 34px;
+}
+
+.slider .icon {
+    font-size: 14px;
+    z-index: 1;
+    user-select: none;
+}
+
+/* La bolita blanca que se mueve */
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 24px;
+    width: 24px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: 0.4s cubic-bezier(0.4, 0.0, 0.2, 1);
+    border-radius: 50%;
+    z-index: 2;
+}
+
+/* Cuando marcamos el checkbox (Día) */
+input:checked + .slider {
+    background-color: #f1c40f; /* Fondo modo claro (Sol) */
+}
+
+/* Movemos la bolita a la derecha */
+input:checked + .slider:before {
+    transform: translateX(28px);
+}
+
+/* =========================================
+   🎨 COLORES DEL MODO OSCURO (Ajusta a tu gusto)
+   ========================================= */
+body.dark-mode {
+    background-color: #121212;
+    color: #e0e0e0;
+}
+
+body.dark-mode .panel,
+body.dark-mode .modal-content {
+    background-color: #1e1e1e;
+    border-color: #333;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+}
+
+body.dark-mode .tabla-header {
+    background-color: #2c3e50;
+    color: #ffffff;
+}
+
+body.dark-mode .operacion-row {
+    border-bottom: 1px solid #333;
+}
+
+body.dark-mode .operacion-row:hover {
+    background-color: #2a2a2a;
+}
+
+/* =========================================
+   🎨 BARRA DE FILTROS MODO OSCURO
+   ========================================= */
+/* Fondo de la barra contenedora (un gris distinto al fondo principal) */
+body.dark-mode .filtros {
+    background-color: #1e2124; 
+    border-color: #2f3136;
+}
+
+/* Color de los campos de texto y desplegables */
+body.dark-mode input,
+body.dark-mode select {
+    background-color: #2f3136;
+    color: #e0e0e0;
+    border: 1px solid #40444b;
+}
+
+/* Color del texto de "Buscar por código..." para que se lea bien */
+body.dark-mode input::placeholder {
+    color: #99aab5;
+}
+
+/* Si tuvieras algún botón dentro de los filtros que no sea primary/secondary */
+body.dark-mode .filtros button {
+    border: 1px solid #40444b;
+}
+
+/* Color del fondo y texto de las opciones del desplegable */
+body.dark-mode select option {
+    background-color: #2f3136;
+    color: #e0e0e0;
+}
+
+/* 🪄 TOQUE MÁGICO: Obliga al navegador a usar su tema oscuro nativo para barras de scroll y menús */
+body.dark-mode {
+    color-scheme: dark;
+}
+
