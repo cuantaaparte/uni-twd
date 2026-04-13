@@ -325,6 +325,11 @@ document.addEventListener("DOMContentLoaded", () => {
                     const fechaHoraProgramada = new Date(operacionEncontrada.horaProgramada).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' });
                     const fechaHoraEstimada = new Date(operacionEncontrada.horaEstimada).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' });
 
+                    const emojiTipo = operacionEncontrada.tipo.toLowerCase() === "tren" ? "🚂" : "✈️";
+                    const tituloModal = document.getElementById("titulo-detalle");
+                    if(tituloModal) tituloModal.innerText = `${emojiTipo} Detalles de la Operación`;
+                    
+
                     document.getElementById("detalle-contenido").innerHTML = `
                         <p>🏷️ <strong>Código:</strong> ${operacionEncontrada.codigo}</p>
                         <p>🚏 <strong>Tipo:</strong> ${operacionEncontrada.tipo.toUpperCase()}</p>

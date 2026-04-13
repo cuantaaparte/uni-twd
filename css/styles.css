@@ -316,14 +316,19 @@ input:checked + .slider:before { transform: translateX(28px); }
    🏷️ 6. ETIQUETAS DE ESTADO
    ========================================= */
 .estado-tag {
-    padding: 5px 10px;
+    padding: 0 10px; /* Quitamos el padding vertical para usar height */
     border-radius: 15px;
     font-size: 0.8rem;
     font-weight: bold;
     color: white; 
     text-transform: uppercase;
-    display: inline-block;
+    /* Magia para centrar a la perfección */
+    display: flex;
+    align-items: center;
+    justify-content: center;
     min-width: 100px;
+    height: 30px; /* Altura estricta para que todas sean idénticas */
+    margin: auto; /* Ancla la etiqueta al centro geométrico de la celda */
 }
 
 .state-programado { background-color: var(--status-green); }
