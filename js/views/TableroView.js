@@ -8,26 +8,22 @@ export class TableroView {
         this.panelLlegadas = document.getElementById("panel-llegadas");
     }
 
-    // Recibimos salidas y llegadas filtradas y ordenadas
     render(salidas, llegadas, operadores, puntos, usuarioActivo = null) {
         this.listaSalidas.innerHTML = "";
         this.listaLlegadas.innerHTML = "";
 
         const esGestor = usuarioActivo && usuarioActivo.rol === "GESTOR";
 
-        // Aplicamos clases de modo gestor para UI adaptativa
         [this.panelSalidas, this.panelLlegadas].forEach(panel => 
             esGestor ? panel.classList.add("modo-gestor") : panel.classList.remove("modo-gestor")
         );
 
-        // Renderizamos panel de salidas
         salidas.forEach(operacion => {
             const operadorEncontrado = operadores.find(operador => operador.operadorId === operacion.operadorId);
             const puntoEncontrado = puntos.find(punto => punto.puntoId === operacion.puntoId);
             this.listaSalidas.innerHTML += this.generarFilaHTML(operacion, operadorEncontrado, puntoEncontrado, esGestor);
         });
 
-        // Renderizamos panel de llegadas
         llegadas.forEach(operacion => {
             const operadorEncontrado = operadores.find(operador => operador.operadorId === operacion.operadorId);
             const puntoEncontrado = puntos.find(punto => punto.puntoId === operacion.puntoId);
@@ -36,14 +32,39 @@ export class TableroView {
     }
 
     generarFilaHTML(operacion, operador, punto, esGestor) {
-        const horaFormateada = new Date(operacion.horaProgramada).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-        const ciudadDestinoOrigen = operacion.sentido === "salida" ? operacion.destino : operacion.origen;
+        // --- LÓGICA DE FECHAS (Hoy, Mañana, Otros) --- 📅
+        const fechaOperacion = new Date(operacion.horaProgramada);
+        
+        // Obtenemos el inicio del día actual
+        const fechaHoy = new Date();
+        fechaHoy.setHours(0, 0, 0, 0);
+        
+        // Obtenemos el inicio del día de mañana
+        const fechaManana = new Date(fechaHoy);
+        fechaManana.setDate(fechaManana.getDate() + 1);
+        
+        // Obtenemos el inicio del día de la operación (para comparar peras con peras)
+        const diaOperacion = new Date(fechaOperacion);
+        diaOperacion.setHours(0, 0, 0, 0);
 
+        let textoFechaHora = "";
+        const formatoSoloHora = fechaOperacion.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+        const formatoSoloFecha = fechaOperacion.toLocaleDateString();
+
+        if (diaOperacion.getTime() === fechaHoy.getTime()) {
+            textoFechaHora = formatoSoloHora; // Si es Hoy -> "14:30"
+        } else if (diaOperacion.getTime() === fechaManana.getTime()) {
+            textoFechaHora = `M-${formatoSoloHora}`; // Si es Mañana -> "M-14:30"
+        } else {
+            textoFechaHora = formatoSoloFecha; // Si es otro día -> "15/04/2026"
+        }
+
+        // --- RESTO DE DATOS ---
+        const ciudadDestinoOrigen = operacion.sentido === "salida" ? operacion.destino : operacion.origen;
         const nombreOperador = operador ? operador.nombre : "Desconocido";
         const iconoOperador = operador ? operador.urlIcono : ""; 
         const siglasOperador = operador ? operador.siglas : "N/A";
 
-        // Controles exclusivos para usuarios con rol GESTOR
         let htmlAccionesAdmin = "";
         if (esGestor) {
             htmlAccionesAdmin = `
@@ -54,10 +75,9 @@ export class TableroView {
             `;
         }
 
-        // Usamos <article> para la fila semántica
         return `
             <article class="operacion-row" data-id="${operacion.operacionId}">
-                <span>${horaFormateada}</span>
+                <span>${textoFechaHora}</span>
                 <span style="font-weight: bold; color: var(--accent-blue, #0f3460);">${operacion.codigo}</span>
                 <span>${ciudadDestinoOrigen}</span>
                 <span class="operador-info">

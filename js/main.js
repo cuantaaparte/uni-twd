@@ -13,11 +13,6 @@ const ROL_PUBLICO = "PÚBLICO";
 const ICONO_POR_DEFECTO = "https://cdn-icons-png.flaticon.com/512/782/782073.png";
 
 // --- HELPERS ---
-
-/**
- * Genera un identificador único alfanumérico (ULID) de 26 caracteres.
- * Obligatorio por enunciado para identificar operaciones sin dependencias externas.
- */
 function generarULID() {
     const caracteresPermitidos = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
     let ulidGenerado = '';
@@ -27,10 +22,6 @@ function generarULID() {
     return ulidGenerado;
 }
 
-/**
- * Limpia el texto de las cabeceras de la tabla para usarlas como identificador de ordenación.
- * Elimina flechas, espacios y tildes para evitar errores de comparación al hacer clic.
- */
 const normalizarIdColumna = (textoColumna) => {
     return textoColumna.replace(/[⬆️⬇️]/g, "")
                        .trim()
@@ -52,7 +43,7 @@ document.addEventListener("DOMContentLoaded", () => {
     authView.renderAuthButtons(usuarioActivo);
 
     // --- ESTADO GLOBAL DE ORDENACIÓN ---
-    let columnaActivaID = "HORA"; 
+    let columnaActivaID = "FECHA-HORA"; 
     let ordenAscendente = true;
 
     // --- FUNCIÓN MAESTRA: FILTRAR, ORDENAR Y PINTAR ---
@@ -82,11 +73,12 @@ document.addEventListener("DOMContentLoaded", () => {
                 const idColumnaLimpio = normalizarIdColumna(columnaActivaID);
 
                 switch (idColumnaLimpio) {
+                    case "FECHA-HORA":
+                    case "FECHAHORA": 
                     case "HORA":
-                        const fecha1 = new Date(operacionA.horaProgramada);
-                        const fecha2 = new Date(operacionB.horaProgramada);
-                        valorOrdenacionA = fecha1.getHours() * 60 + fecha1.getMinutes();
-                        valorOrdenacionB = fecha2.getHours() * 60 + fecha2.getMinutes();
+                        // ⏱️ CONVERSIÓN BLINDADA: Transforma cualquier formato (texto o número) a Milisegundos puros
+                        valorOrdenacionA = new Date(Number(operacionA.horaProgramada) || operacionA.horaProgramada).getTime();
+                        valorOrdenacionB = new Date(Number(operacionB.horaProgramada) || operacionB.horaProgramada).getTime();
                         break;
                     case "CODIGO":
                         valorOrdenacionA = operacionA.codigo.toLowerCase();
@@ -134,7 +126,6 @@ document.addEventListener("DOMContentLoaded", () => {
         const contenedorAuth = document.querySelector(".auth-buttons");
         let infoUsuarioLogueado = document.getElementById("info-usuario-activo");
 
-        // Info de usuario superior
         if (usuarioActual) {
             if (!infoUsuarioLogueado) {
                 infoUsuarioLogueado = document.createElement("span");
@@ -150,7 +141,6 @@ document.addEventListener("DOMContentLoaded", () => {
             infoUsuarioLogueado.remove();
         }
 
-        // Creador dinámico de botones
         const alternarBotonAdmin = (idBoton, mostrar, textoBoton, claseEstilo, colorFondoOpcional) => {
             let botonElemento = document.getElementById(idBoton);
             if (mostrar && !botonElemento) {
@@ -173,7 +163,6 @@ document.addEventListener("DOMContentLoaded", () => {
         alternarBotonAdmin("btn-gestionar-puntos", tienePermisosGestor, "🚪 Puntos", "btn-secondary");
     };
 
-    // Eventos Filtros Principales
     if(inputBusqueda) inputBusqueda.addEventListener("input", aplicarFiltros);
     if(selectEstado) selectEstado.addEventListener("change", aplicarFiltros);
 
@@ -204,15 +193,15 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         } else {
             if (usuariosGuardados.some(usuario => usuario.email === emailIntroducido)) {
-                return alert("El Email introducido ya existe");
+                return alert("El Email introducido ya existe ⚠️");
             }
             if (passwordIntroducida.length <= 8 || !/\d/.test(passwordIntroducida)) {
-                return alert("La contraseña debe tener más de 8 caracteres y contener al menos 1 número");
+                return alert("La contraseña debe tener más de 8 caracteres y contener al menos 1 número 🔐");
             }
             
             usuariosGuardados.push(new Usuario(emailIntroducido, passwordIntroducida, ROLES_USUARIO.PUBLICO));
             localStorage.setItem("usuarios", JSON.stringify(usuariosGuardados));
-            alert("Cuenta creada con éxito.");
+            alert("Cuenta creada con éxito ✅");
             authView.show(false); 
         }
     });
@@ -238,13 +227,12 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (idColumnaClicada === "ACCIONES") return; 
 
                 if (normalizarIdColumna(columnaActivaID) === idColumnaClicada) {
-                    ordenAscendente = !ordenAscendente; // Invertir orden si es la misma columna
+                    ordenAscendente = !ordenAscendente; 
                 } else {
-                    columnaActivaID = idColumnaClicada; // Nueva columna, reiniciar a ascendente
+                    columnaActivaID = idColumnaClicada; 
                     ordenAscendente = true;
                 }
 
-                // Actualización visual de flechas
                 document.querySelectorAll(".tabla-header span").forEach(cabeceraSpan => {
                     const idCabeceraIterada = normalizarIdColumna(cabeceraSpan.innerText);
                     const textoBaseLimpio = cabeceraSpan.innerText.replace(/[⬆️⬇️]/g, "").trim();
@@ -462,7 +450,6 @@ document.addEventListener("DOMContentLoaded", () => {
             const nuevoRolAsignado = botonCambiarRol.getAttribute("data-rol");
             let usuariosGuardados = JSON.parse(localStorage.getItem("usuarios")) || [];
 
-            // Prevención para no quedarse sin gestores
             if (nuevoRolAsignado === ROL_PUBLICO && usuariosGuardados.filter(usuario => usuario.rol === ROL_GESTOR).length <= 1) {
                 return alert("⚠️ ALERTA DE SISTEMA: No puedes degradar al último Gestor disponible.");
             }
@@ -471,11 +458,10 @@ document.addEventListener("DOMContentLoaded", () => {
             usuariosGuardados[indiceUsuario].rol = nuevoRolAsignado;
             localStorage.setItem("usuarios", JSON.stringify(usuariosGuardados));
 
-            // Sincronización de sesión si te auto-modificas
             if (usuarioActivo && emailUsuarioModificado === usuarioActivo.email) {
                 usuarioActivo.rol = nuevoRolAsignado;
                 sessionStorage.setItem("usuarioActivo", JSON.stringify(usuarioActivo));
-                alert(`Su rol en el sistema ha cambiado a: ${nuevoRolAsignado}. Actualizando la interfaz...`);
+                alert(`Su rol en el sistema ha cambiado a: ${nuevoRolAsignado}. Actualizando la interfaz... 🔄`);
                 location.reload(); 
                 return;
             }
@@ -536,7 +522,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Carga inicial y temporizador de refresco
     aplicarFiltros();
     setInterval(() => { 
-        console.log("Refrescando tablero de operaciones..."); 
+        console.log("Refrescando tablero de operaciones... 🔄"); 
         aplicarFiltros(); 
     }, TIEMPO_REFRESCO_MS); 
 });
