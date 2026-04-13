@@ -8,8 +8,13 @@
 </head>
 <body>
     <header>
-        <h1> Panel Informativo </h1>
-        <div id="auth-status"></div>
+        <h1>✈️ Panel Informativo 🚂</h1>
+        
+        <div class="auth-buttons">
+            <button id="btn-login" class="btn-primary">Entrar</button>
+            <button id="btn-signup" class="btn-secondary">Registrarse</button>
+            <button id="btn-logout" class="btn-danger hidden">Cerrar Sesión</button>
+        </div>
     </header>
 
     <main>
@@ -26,9 +31,8 @@
 
         <div class="tableros-container">
             
-            
             <section class="panel" id="panel-salidas">
-                <h2> Salidas</h2>
+                <h2>🛫 Salidas</h2>
                 <div class="tabla-header">
                     <span>Hora</span>
                     <span>Código</span>
@@ -37,13 +41,11 @@
                     <span>Puerta/Vía</span>
                     <span>Estado</span>
                 </div>
-                <div id="lista-salidas" class="tabla-cuerpo">
-                    </div>
+                <div id="lista-salidas" class="tabla-cuerpo"></div>
             </section>
 
-            
             <section class="panel" id="panel-llegadas">
-                <h2> Llegadas</h2>
+                <h2>🛬 Llegadas</h2>
                 <div class="tabla-header">
                     <span>Hora</span>
                     <span>Código</span>
@@ -52,12 +54,30 @@
                     <span>Puerta/Vía</span>
                     <span>Estado</span>
                 </div>
-                <div id="lista-llegadas" class="tabla-cuerpo">
-                    </div>
+                <div id="lista-llegadas" class="tabla-cuerpo"></div>
             </section>
 
         </div>
     </main>
+
+    <div id="modal-auth" class="modal-overlay hidden">
+        <div class="modal-content">
+            <span id="close-modal" class="close">&times;</span>
+            <h2 id="modal-title">Iniciar Sesión</h2>
+            
+            <form id="auth-form">
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="auth-email" required placeholder="tu@email.com">
+                </div>
+                <div class="form-group">
+                    <label>Contraseña</label>
+                    <input type="password" id="auth-password" required placeholder="••••••••">
+                </div>
+                <button type="submit" id="auth-submit" class="btn-full">Confirmar</button>
+            </form>
+        </div>
+    </div>
 
     <script type="module" src="./js/main.js"></script>
 </body>
