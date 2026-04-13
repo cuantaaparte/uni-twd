@@ -197,3 +197,133 @@ header {
 .hidden {
     display: none !important;
 }
+
+/* Contenedor para que los botones tengan espacio entre ellos */
+.auth-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 10px;
+}
+
+/* Botón principal (Entrar) */
+.btn-primary {
+    background-color: var(--accent-blue); /* Usamos el azul oscuro de tus variables */
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    font-size: 0.9rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.btn-primary:hover {
+    background-color: #16498a; /* Un azul un poco más claro al pasar el ratón */
+}
+
+/* Botón secundario (Registrarse) */
+.btn-secondary {
+    background-color: #7f8fa6; /* Un gris azulado elegante */
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    font-size: 0.9rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.btn-secondary:hover {
+    background-color: #718093;
+}
+
+/* =========================================
+   🎨 ESTILOS DEL MODAL (LOGIN/REGISTRO)
+   ========================================= */
+
+/* Hacemos que la caja blanca resalte de verdad */
+.modal-content {
+    background: var(--panel-bg);
+    padding: 30px 40px;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 400px;
+    position: relative;
+    box-shadow: 0 15px 30px rgba(0,0,0,0.5);
+    color: var(--text-main); /* Forzamos texto oscuro */
+}
+
+/* Título centrado y con color */
+.modal-content h2 {
+    text-align: center;
+    margin-bottom: 20px;
+    color: var(--accent-blue);
+    background: transparent;
+}
+
+/* Alineación de las etiquetas y los inputs (Flexbox en columna) */
+.form-group {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    margin-bottom: 8px;
+    font-weight: bold;
+    font-size: 0.9rem;
+    color: #555;
+}
+
+/* Las cajas de texto de email y contraseña */
+.form-group input {
+    padding: 12px;
+    border: 2px solid var(--border-color);
+    border-radius: 6px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+/* Efecto "Glow" azul cuando haces clic para escribir */
+.form-group input:focus {
+    outline: none;
+    border-color: var(--accent-blue);
+    box-shadow: 0 0 8px rgba(15, 52, 96, 0.2);
+}
+
+/* Botón gigante de confirmar */
+.btn-full {
+    width: 100%;
+    padding: 12px;
+    background-color: var(--accent-blue); 
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    margin-top: 15px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.btn-full:hover {
+    background-color: #16498a;
+}
+
+/* La 'X' de la esquina para cerrar */
+.close {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    font-size: 28px;
+    color: #aaa;
+    cursor: pointer;
+    transition: color 0.3s ease;
+}
+
+.close:hover {
+    color: var(--status-red); /* Se pone roja al pasar el ratón */
+}
