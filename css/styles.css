@@ -1,0 +1,137 @@
+/* 🎨 VARIABLES DE ESTILO */
+:root {
+    --bg-color: #eef2f3;
+    --panel-bg: #ffffff;
+    --primary-dark: #1a1a2e;
+    --accent-blue: #0f3460;
+    --text-main: #333333;
+    --text-light: #ffffff;
+    --border-color: #dddddd;
+    --status-green: #2ecc71;
+    --status-red: #e74c3c;
+    --status-yellow: #f1c40f;
+}
+
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-main);
+    line-height: 1.6;
+}
+
+/* 🔝 CABECERA */
+header {
+    background-color: var(--primary-dark);
+    color: var(--text-light);
+    padding: 1.5rem;
+    text-align: center;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+/* 🔍 SECCIÓN DE FILTROS (Flexbox) */
+.filtros {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    padding: 20px;
+    background: #fff;
+    margin-bottom: 2px;
+}
+
+.filtros input, .filtros select {
+    padding: 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    font-size: 1rem;
+}
+
+/* 📊 CONTENEDOR DE TABLEROS (Responsivo con Flexbox) */
+/* Por defecto: una columna (móvil) */
+.tableros-container {
+    display: flex;
+    flex-direction: column; 
+    gap: 25px;
+    padding: 20px;
+}
+
+/* 📋 ESTILO DE LOS PANELES */
+.panel {
+    background: var(--panel-bg);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+}
+
+.panel h2 {
+    background-color: var(--accent-blue);
+    color: white;
+    padding: 15px;
+    font-size: 1.2rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* 📐 ESTRUCTURA DE TABLA (CSS GRID) */
+/* Definimos 6 columnas para los datos del tablero [cite: 49, 50, 51, 52, 53, 54] */
+.tabla-header, .operacion-row {
+    display: grid;
+    grid-template-columns: 0.8fr 1fr 1.5fr 1fr 1fr 1.2fr;
+    gap: 10px;
+    padding: 15px;
+    align-items: center;
+}
+
+.tabla-header {
+    background-color: #f8f9fa;
+    font-weight: bold;
+    border-bottom: 2px solid var(--border-color);
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    color: #666;
+}
+
+.operacion-row {
+    border-bottom: 1px solid #eee;
+    transition: background 0.3s;
+}
+
+.operacion-row:hover {
+    background-color: #f1f7ff;
+}
+
+/* 📱 ADAPTACIÓN PARA MÓVIL (Media Queries)  */
+@media (max-width: 768px) {
+    /* En móvil, las tablas suelen ser difíciles de ver, 
+       ajustamos el tamaño de fuente o permitimos scroll horizontal */
+    .tabla-header, .operacion-row {
+        font-size: 0.8rem;
+        grid-template-columns: 1fr 1fr 1fr; /* Simplificamos la vista en móvil si es necesario */
+    }
+    
+    /* Ocultamos columnas menos importantes en pantallas muy pequeñas */
+    .tabla-header span:nth-child(4), 
+    .tabla-header span:nth-child(5),
+    .operacion-row span:nth-child(4),
+    .operacion-row span:nth-child(5) {
+        display: none;
+    }
+}
+
+/* 💻 DISEÑO PARA ESCRITORIO  */
+@media (min-width: 1024px) {
+    .tableros-container {
+        flex-direction: row; /* Paneles uno al lado del otro */
+        align-items: flex-start;
+    }
+
+    .panel {
+        flex: 1; /* Ambos paneles ocupan el mismo ancho */
+    }
+}

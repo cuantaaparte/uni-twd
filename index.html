@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Control - Estación Aeroportuaria</title>
+    <link rel="stylesheet" href="./css/styles.css">
+</head>
+<body>
+    <header>
+        <h1> Panel Informativo </h1>
+        <div id="auth-status"></div>
+    </header>
+
+    <main>
+        <section class="filtros">
+            <input type="text" id="busqueda-codigo" placeholder="Buscar por código (ej: IB123)...">
+            <select id="filtro-estado">
+                <option value="TODOS">Todos los estados</option>
+                <option value="PROGRAMADO">Programado</option>
+                <option value="RETRASADO">Retrasado</option>
+                <option value="CANCELADO">Cancelado</option>
+                <option value="EMBARCANDO">Embarcando</option>
+            </select>
+        </section>
+
+        <div class="tableros-container">
+            
+            
+            <section class="panel" id="panel-salidas">
+                <h2> Salidas</h2>
+                <div class="tabla-header">
+                    <span>Hora</span>
+                    <span>Código</span>
+                    <span>Destino</span>
+                    <span>Operador</span>
+                    <span>Puerta/Vía</span>
+                    <span>Estado</span>
+                </div>
+                <div id="lista-salidas" class="tabla-cuerpo">
+                    </div>
+            </section>
+
+            
+            <section class="panel" id="panel-llegadas">
+                <h2> Llegadas</h2>
+                <div class="tabla-header">
+                    <span>Hora</span>
+                    <span>Código</span>
+                    <span>Origen</span>
+                    <span>Operador</span>
+                    <span>Puerta/Vía</span>
+                    <span>Estado</span>
+                </div>
+                <div id="lista-llegadas" class="tabla-cuerpo">
+                    </div>
+            </section>
+
+        </div>
+    </main>
+
+    <script type="module" src="./js/main.js"></script>
+</body>
+</html>
