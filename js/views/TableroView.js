@@ -8,35 +8,30 @@ export class TableroView {
         this.panelLlegadas = document.getElementById("panel-llegadas"); // 🆕 Para el CSS
     }
 
-    // 🆕 Ahora recibimos al usuarioActivo como cuarto parámetro
-    render(operaciones, operadores, puntos, usuarioActivo = null) {
+    // Recibimos salidas y llegadas por separado
+    render(salidas, llegadas, operadores, puntos, usuarioActivo = null) {
         this.listaSalidas.innerHTML = "";
         this.listaLlegadas.innerHTML = "";
 
-        // 🆕 ¿Es el jefe?
         const esGestor = usuarioActivo && usuarioActivo.rol === "GESTOR";
 
-        // 🆕 Aplicamos o quitamos la clase CSS que cambia el Grid a 7 columnas
-        if (esGestor) {
-            this.panelSalidas.classList.add("modo-gestor");
-            this.panelLlegadas.classList.add("modo-gestor");
-        } else {
-            this.panelSalidas.classList.remove("modo-gestor");
-            this.panelLlegadas.classList.remove("modo-gestor");
-        }
+        // Aplicamos clases de modo gestor
+        [this.panelSalidas, this.panelLlegadas].forEach(p => 
+            esGestor ? p.classList.add("modo-gestor") : p.classList.remove("modo-gestor")
+        );
 
-        operaciones.forEach(op => {
+        // Pintamos salidas
+        salidas.forEach(op => {
             const operador = operadores.find(o => o.operadorId === op.operadorId);
             const punto = puntos.find(p => p.puntoId === op.puntoId);
+            this.listaSalidas.innerHTML += this.generarFilaHTML(op, operador, punto, esGestor);
+        });
 
-            // 🆕 Le pasamos el "esGestor" a la fila
-            const filaHTML = this.generarFilaHTML(op, operador, punto, esGestor);
-
-            if (op.sentido === "salida") {
-                this.listaSalidas.innerHTML += filaHTML;
-            } else {
-                this.listaLlegadas.innerHTML += filaHTML;
-            }
+        // Pintamos llegadas
+        llegadas.forEach(op => {
+            const operador = operadores.find(o => o.operadorId === op.operadorId);
+            const punto = puntos.find(p => p.puntoId === op.puntoId);
+            this.listaLlegadas.innerHTML += this.generarFilaHTML(op, operador, punto, esGestor);
         });
     }
 
