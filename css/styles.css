@@ -1,18 +1,85 @@
-/* 🎨 VARIABLES DE ESTILO */
+/* =========================================
+   🎨 1. VARIABLES DE TEMA (CLEAN CODE)
+   ========================================= */
+
+/* Tema Claro (Por Defecto) */
 :root {
+    /* Superficies y Fondos */
     --bg-color: #eef2f3;
     --panel-bg: #ffffff;
+    --filter-bg: #ffffff;
     --primary-dark: #1a1a2e;
-    --accent-blue: #0f3460;
+    
+    /* Textos */
     --text-main: #333333;
+    --text-muted: #666666;
     --text-light: #ffffff;
+    --btn-text: #ffffff;
+    
+    /* Bordes e Inputs */
     --border-color: #dddddd;
+    --input-bg: #ffffff;
+    --input-border: #dddddd;
+    
+    /* Color de Acento (Azul principal) */
+    --accent-blue: #0f3460;
+    --accent-blue-hover: #16498a;
+    
+    /* Tablas */
+    --table-header-bg: #f8f9fa;
+    --row-bg: transparent;
+    --row-border: #eeeeee;
+    --row-hover-bg: #f1f7ff;
+    
+    /* Sombras */
+    --shadow-color: rgba(0, 0, 0, 0.05);
+    --shadow-modal: rgba(0, 0, 0, 0.2);
+
+    /* Estados fijos */
     --status-green: #2ecc71;
     --status-red: #e74c3c;
     --status-yellow: #f1c40f;
 }
 
+/* Tema Oscuro */
+body.dark-mode {
+    /* Superficies y Fondos */
+    --bg-color: #121212;
+    --panel-bg: #1e1e1e;
+    --filter-bg: #1e2124;
+    
+    /* Textos */
+    --text-main: #e0e0e0;
+    --text-muted: #99aab5;
+    --btn-text: #121212; /* Texto oscuro para botones claros */
+    
+    /* Bordes e Inputs */
+    --border-color: #333333;
+    --input-bg: #2f3136;
+    --input-border: #40444b;
+    
+    /* AZUL NEUTRO Y LUMINOSO (Mejor contraste) */
+    --accent-blue: #5dade2; 
+    --accent-blue-hover: #3498db;
+    
+    /* Tablas */
+    --table-header-bg: #2c3e50;
+    --row-bg: #2b2d31;
+    --row-border: #1e1f22;
+    --row-hover-bg: #383a40;
+    
+    /* Sombras */
+    --shadow-color: rgba(0, 0, 0, 0.4);
+    --shadow-modal: rgba(0, 0, 0, 0.7);
+    
+    /* Fuerza scrollbars y controles nativos oscuros */
+    color-scheme: dark; 
+}
 
+
+/* =========================================
+   🌐 2. BASE Y RESET
+   ========================================= */
 * {
     box-sizing: border-box;
     margin: 0;
@@ -24,36 +91,141 @@ body {
     background-color: var(--bg-color);
     color: var(--text-main);
     line-height: 1.6;
+    /* Transición suave entre día y noche */
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-/* 🔝 CABECERA */
+
+/* =========================================
+   🔝 3. UI GLOBAL Y CABECERA
+   ========================================= */
 header {
     background-color: var(--primary-dark);
     color: var(--text-light);
     padding: 1.5rem;
     text-align: center;
     box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
-/* 🔍 SECCIÓN DE FILTROS (Flexbox) */
+.auth-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 15px;
+    align-items: center;
+}
+
+/* Botones Básicos */
+button {
+    cursor: pointer;
+    border: none;
+    border-radius: 5px;
+    font-weight: bold;
+    transition: background-color 0.3s ease, transform 0.1s ease;
+}
+
+.btn-primary, .btn-full {
+    background-color: var(--accent-blue);
+    color: var(--btn-text);
+}
+
+.btn-primary {
+    padding: 10px 20px;
+    font-size: 0.9rem;
+}
+
+.btn-full {
+    width: 100%;
+    padding: 12px;
+    font-size: 1.1rem;
+    margin-top: 15px;
+}
+
+.btn-primary:hover, .btn-full:hover {
+    background-color: var(--accent-blue-hover);
+}
+
+.btn-secondary {
+    background-color: #7f8fa6;
+    color: white;
+    padding: 10px 20px;
+}
+
+.btn-secondary:hover {
+    background-color: #718093;
+}
+
+.btn-danger {
+    background-color: var(--status-red);
+    color: white;
+    padding: 10px 20px;
+}
+
+.btn-icon {
+    background: none;
+    font-size: 1.2rem;
+}
+
+.btn-icon:hover {
+    transform: scale(1.2);
+}
+
+/* Switch Animado (Modo Oscuro) */
+.theme-switch {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 32px;
+    margin-right: 20px;
+}
+.theme-switch input { opacity: 0; width: 0; height: 0; }
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: #34495e; 
+    transition: 0.4s;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 6px;
+    border-radius: 34px;
+}
+
+.slider .icon { font-size: 14px; z-index: 1; user-select: none; }
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 24px; width: 24px;
+    left: 4px; bottom: 4px;
+    background-color: white;
+    transition: 0.4s cubic-bezier(0.4, 0.0, 0.2, 1);
+    border-radius: 50%;
+    z-index: 2;
+}
+
+input:checked + .slider { background-color: #f1c40f; }
+input:checked + .slider:before { transform: translateX(28px); }
+
+
+/* =========================================
+   📐 4. LAYOUT Y PANELES
+   ========================================= */
 .filtros {
     display: flex;
     justify-content: center;
     gap: 15px;
     padding: 20px;
-    background: #fff;
+    background-color: var(--filter-bg);
     margin-bottom: 2px;
+    border-bottom: 1px solid var(--border-color);
 }
 
-.filtros input, .filtros select {
-    padding: 10px;
-    border: 1px solid var(--border-color);
-    border-radius: 5px;
-    font-size: 1rem;
-}
-
-/* 📊 CONTENEDOR DE TABLEROS (Responsivo con Flexbox) */
-/* Por defecto: una columna (móvil) */
 .tableros-container {
     display: flex;
     flex-direction: column; 
@@ -61,123 +233,105 @@ header {
     padding: 20px;
 }
 
-/* 📋 ESTILO DE LOS PANELES */
 .panel {
-    background: var(--panel-bg);
+    background-color: var(--panel-bg);
     border-radius: 8px;
     overflow: hidden;
-    box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+    box-shadow: 0 10px 20px var(--shadow-color);
+    border: 1px solid var(--border-color);
 }
 
 .panel h2 {
     background-color: var(--accent-blue);
-    color: white;
+    color: var(--btn-text);
     padding: 15px;
     font-size: 1.2rem;
     text-transform: uppercase;
     letter-spacing: 1px;
 }
 
-/* 📐 ESTRUCTURA DE TABLA (CSS GRID) */
-/* Definimos 6 columnas para los datos del tablero [cite: 49, 50, 51, 52, 53, 54] */
+
+/* =========================================
+   📊 5. TABLAS (GRID Y CENTRADO)
+   ========================================= */
 .tabla-header, .operacion-row {
     display: grid;
     grid-template-columns: 0.8fr 1fr 1.5fr 1fr 1fr 1.2fr;
     gap: 10px;
     padding: 15px;
-    align-items: center;
+}
+
+.modo-gestor .tabla-header, 
+.modo-gestor .operacion-row {
+    grid-template-columns: 0.8fr 1fr 1.5fr 1fr 1fr 1.2fr 0.8fr; 
+}
+
+/* Centrado perfecto de contenido en las celdas */
+.tabla-header span,
+.operacion-row span,
+.acciones-gestor {
+    display: flex;
+    align-items: center;      
+    justify-content: center;  
+    text-align: center;
+}
+
+.acciones-gestor {
+    gap: 10px;
 }
 
 .tabla-header {
-    background-color: #f8f9fa;
+    background-color: var(--table-header-bg);
     font-weight: bold;
     border-bottom: 2px solid var(--border-color);
     text-transform: uppercase;
     font-size: 0.85rem;
-    color: #666;
+    color: var(--text-muted);
+}
+
+.tabla-header span {
+    cursor: pointer;
+    transition: color 0.3s ease;
+    user-select: none; 
+}
+
+.tabla-header span:hover {
+    color: var(--accent-blue);
 }
 
 .operacion-row {
-    border-bottom: 1px solid #eee;
-    transition: background 0.3s;
+    background-color: var(--row-bg);
+    border-bottom: 1px solid var(--row-border);
+    transition: background-color 0.2s ease, transform 0.1s ease;
+    cursor: pointer;
 }
 
 .operacion-row:hover {
-    background-color: #f1f7ff;
+    background-color: var(--row-hover-bg);
+    transform: scale(1.01); 
 }
 
-/* 📱 ADAPTACIÓN PARA MÓVIL (Media Queries)  */
-@media (max-width: 768px) {
-    /* En móvil, las tablas suelen ser difíciles de ver, 
-       ajustamos el tamaño de fuente o permitimos scroll horizontal */
-    .tabla-header, .operacion-row {
-        font-size: 0.8rem;
-        grid-template-columns: 1fr 1fr 1fr; /* Simplificamos la vista en móvil si es necesario */
-    }
-    
-    /* Ocultamos columnas menos importantes en pantallas muy pequeñas */
-    .tabla-header span:nth-child(4), 
-    .tabla-header span:nth-child(5),
-    .operacion-row span:nth-child(4),
-    .operacion-row span:nth-child(5) {
-        display: none;
-    }
-}
 
-/* 💻 DISEÑO PARA ESCRITORIO  */
-@media (min-width: 1024px) {
-    .tableros-container {
-        flex-direction: row; /* Paneles uno al lado del otro */
-        align-items: flex-start;
-    }
-
-    .panel {
-        flex: 1; /* Ambos paneles ocupan el mismo ancho */
-    }
-}
-
-/* 🏷️ ESTILO GENERAL DE LAS ETIQUETAS */
+/* =========================================
+   🏷️ 6. ETIQUETAS DE ESTADO
+   ========================================= */
 .estado-tag {
     padding: 5px 10px;
     border-radius: 15px;
     font-size: 0.8rem;
     font-weight: bold;
-    color: white; /* Texto blanco para todos */
+    color: white; 
     text-transform: uppercase;
     display: inline-block;
-    text-align: center;
     min-width: 100px;
 }
 
-/* 🚦 COLORES SEGÚN EL ESTADO */
-.state-programado {
-    background-color: #2ecc71; /* Verde esmeralda */
-}
-
-.state-retrasado {
-    background-color: #f1c40f; /* Amarillo girasol */
-    color: #333; /* Texto oscuro para que se lea bien el amarillo */
-}
-
-.state-cancelado {
-    background-color: #e74c3c; /* Rojo alizarina */
-}
-
-.state-embarcando {
-    background-color: #9b59b6; /* Morado amatista */
-}
-
-.state-en_ruta {
-    background-color: #3498db; /* Azul belice */
-}
-
-.state-llegado {
-    background-color: #95a5a6; /* Gris concreto */
-}
-
-.state-embarcando {
-    animation: parpadeo 1.5s infinite;
-}
+.state-programado { background-color: var(--status-green); }
+.state-retrasado { background-color: var(--status-yellow); color: #333; }
+.state-cancelado { background-color: var(--status-red); }
+.state-embarcando { background-color: #9b59b6; animation: parpadeo 1.5s infinite; }
+.state-en_ruta { background-color: #3498db; }
+.state-llegado { background-color: #95a5a6; }
 
 @keyframes parpadeo {
     0% { opacity: 1; }
@@ -185,86 +339,51 @@ header {
     100% { opacity: 1; }
 }
 
-.btn-danger {
-    background-color: #e74c3c;
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 5px;
-    cursor: pointer;
-}
-
-.hidden {
-    display: none !important;
-}
-
-/* Contenedor para que los botones tengan espacio entre ellos */
-.auth-buttons {
-    display: flex;
-    gap: 10px;
-    justify-content: center;
-    margin-top: 10px;
-}
-
-/* Botón principal (Entrar) */
-.btn-primary {
-    background-color: var(--accent-blue); /* Usamos el azul oscuro de tus variables */
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 5px;
-    font-size: 0.9rem;
-    font-weight: bold;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-}
-
-.btn-primary:hover {
-    background-color: #16498a; /* Un azul un poco más claro al pasar el ratón */
-}
-
-/* Botón secundario (Registrarse) */
-.btn-secondary {
-    background-color: #7f8fa6; /* Un gris azulado elegante */
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 5px;
-    font-size: 0.9rem;
-    font-weight: bold;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-}
-
-.btn-secondary:hover {
-    background-color: #718093;
-}
 
 /* =========================================
-   🎨 ESTILOS DEL MODAL (LOGIN/REGISTRO)
+   🗔 7. MODALES Y FORMULARIOS
    ========================================= */
+.hidden { display: none !important; }
 
-/* Hacemos que la caja blanca resalte de verdad */
+.modal-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
 .modal-content {
-    background: var(--panel-bg);
+    background-color: var(--panel-bg);
     padding: 30px 40px;
     border-radius: 12px;
     width: 90%;
     max-width: 400px;
     position: relative;
-    box-shadow: 0 15px 30px rgba(0,0,0,0.5);
-    color: var(--text-main); /* Forzamos texto oscuro */
+    box-shadow: 0 15px 30px var(--shadow-modal);
+    color: var(--text-main); 
+    border: 1px solid var(--border-color);
 }
 
-/* Título centrado y con color */
 .modal-content h2 {
     text-align: center;
     margin-bottom: 20px;
     color: var(--accent-blue);
-    background: transparent;
 }
 
-/* Alineación de las etiquetas y los inputs (Flexbox en columna) */
+.close {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    font-size: 28px;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: color 0.3s ease;
+}
+.close:hover { color: var(--status-red); }
+
 .form-group {
     display: flex;
     flex-direction: column;
@@ -275,287 +394,77 @@ header {
     margin-bottom: 8px;
     font-weight: bold;
     font-size: 0.9rem;
-    color: #555;
+    color: var(--text-muted);
 }
 
-/* Las cajas de texto de email y contraseña */
-.form-group input {
+/* Formularios Unificados */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="datetime-local"],
+select {
     padding: 12px;
-    border: 2px solid var(--border-color);
+    border: 2px solid var(--input-border);
     border-radius: 6px;
     font-size: 1rem;
+    background-color: var(--input-bg);
+    color: var(--text-main);
     transition: all 0.3s ease;
+    width: 100%;
 }
 
-/* Efecto "Glow" azul cuando haces clic para escribir */
-.form-group input:focus {
+input:focus, select:focus {
     outline: none;
     border-color: var(--accent-blue);
     box-shadow: 0 0 8px rgba(15, 52, 96, 0.2);
 }
 
-/* Botón gigante de confirmar */
-.btn-full {
-    width: 100%;
-    padding: 12px;
-    background-color: var(--accent-blue); 
-    color: white;
-    border: none;
-    border-radius: 6px;
-    font-size: 1.1rem;
-    font-weight: bold;
-    margin-top: 15px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
+input::placeholder {
+    color: var(--text-muted);
 }
 
-.btn-full:hover {
-    background-color: #16498a;
-}
-
-/* La 'X' de la esquina para cerrar */
-.close {
-    position: absolute;
-    top: 15px;
-    right: 20px;
-    font-size: 28px;
-    color: #aaa;
-    cursor: pointer;
-    transition: color 0.3s ease;
-}
-
-.close:hover {
-    color: var(--status-red); /* Se pone roja al pasar el ratón */
-}
-
-/* 🛠️ MODO GESTOR (7 Columnas en lugar de 6) */
-.modo-gestor .tabla-header, 
-.modo-gestor .operacion-row {
-    grid-template-columns: 0.8fr 1fr 1.5fr 1fr 1fr 1.2fr 0.8fr; /* La última es para botones */
-}
-
-/* Mostrar la cabecera de acciones si somos gestores */
-.modo-gestor .col-acciones {
-    display: inline; 
-}
-
-/* Botones de acción */
-.acciones-gestor {
-    display: flex;
-    gap: 8px;
-    justify-content: center;
-}
-
-.btn-icon {
-    background: none;
-    border: none;
-    font-size: 1.2rem;
-    cursor: pointer;
-    transition: transform 0.2s;
-}
-
-.btn-icon:hover {
-    transform: scale(1.2); /* Efecto lupa al pasar el ratón */
-}
-
-/* =========================================
-   🎨 ESTILOS PARA LOS DESPLEGABLES (SELECT)
-   ========================================= */
-
-/* Estilo general para todos los selects */
 select {
-    appearance: none; /* Quitamos la flecha fea por defecto del navegador */
+    appearance: none;
     -webkit-appearance: none;
     -moz-appearance: none;
-    background-color: var(--panel-bg);
-    color: var(--text-main);
-    padding: 12px 35px 12px 15px; /* Espacio extra a la derecha para la flecha custom */
-    border: 2px solid var(--border-color);
-    border-radius: 6px;
-    font-size: 1rem;
+    padding-right: 35px;
     cursor: pointer;
-    transition: all 0.3s ease;
-    width: 100%;
-    
-    /* Añadimos una flechita custom usando un SVG de fondo */
-    background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23007CB2%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+    /* Flecha custom gris neutral que se ve bien siempre */
+    background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%2399aab5%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
     background-repeat: no-repeat;
     background-position: right 15px top 50%;
     background-size: 12px auto;
 }
 
-/* Efecto glow al hacer clic (igual que los inputs) */
-select:focus {
-    outline: none;
-    border-color: var(--accent-blue);
-    box-shadow: 0 0 8px rgba(15, 52, 96, 0.2);
-}
-
-/* Para que las opciones dentro del select se lean bien si el fondo es oscuro */
 select option {
-    background-color: var(--panel-bg);
+    background-color: var(--input-bg);
     color: var(--text-main);
 }
 
-/* =========================================
-   🖱️ EFECTOS HOVER (ORDENACIÓN Y DETALLE)
-   ========================================= */
-
-/* Efecto al pasar el ratón por las cabeceras (para ordenar) */
-.tabla-header span {
-    cursor: pointer;
-    transition: color 0.3s ease;
-    user-select: none; /* Evita que el texto se ponga azul al hacer doble clic */
-}
-
-.tabla-header span:hover {
-    color: var(--accent-blue);
-    font-weight: bold;
-}
-
-/* Efecto al pasar el ratón por un vuelo (para ver detalles) */
-.operacion-row {
-    cursor: pointer;
-    transition: background-color 0.2s ease, transform 0.1s ease;
-}
-
-.operacion-row:hover {
-    background-color: var(--border-color); /* Resalte sutil */
-    transform: scale(1.01); /* Se hace un pelín más grande */
-}
-
-/* Evitamos que el clic en los botones abra la vista detalle */
-.acciones-gestor {
-    cursor: default;
-}
 
 /* =========================================
-   🌓 ANIMACIÓN DEL BOTÓN DARK MODE
+   📱 8. MEDIA QUERIES (RESPONSIVE)
    ========================================= */
-.theme-switch {
-    position: relative;
-    display: inline-block;
-    width: 60px;
-    height: 32px;
-    margin-right: 20px; /* Separación con los botones de login */
+@media (max-width: 768px) {
+    .tabla-header, .operacion-row {
+        font-size: 0.8rem;
+        grid-template-columns: 1fr 1fr 1fr; 
+    }
+    
+    .tabla-header span:nth-child(4), 
+    .tabla-header span:nth-child(5),
+    .operacion-row span:nth-child(4),
+    .operacion-row span:nth-child(5) {
+        display: none;
+    }
 }
 
-.theme-switch input {
-    opacity: 0;
-    width: 0;
-    height: 0;
+@media (min-width: 1024px) {
+    .tableros-container {
+        flex-direction: row; 
+        align-items: flex-start;
+    }
+    .panel {
+        flex: 1; 
+    }
 }
-
-.slider {
-    position: absolute;
-    cursor: pointer;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background-color: #34495e; /* Fondo modo oscuro (Noche) */
-    transition: 0.4s;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 6px;
-    box-sizing: border-box;
-}
-
-.slider.round {
-    border-radius: 34px;
-}
-
-.slider .icon {
-    font-size: 14px;
-    z-index: 1;
-    user-select: none;
-}
-
-/* La bolita blanca que se mueve */
-.slider:before {
-    position: absolute;
-    content: "";
-    height: 24px;
-    width: 24px;
-    left: 4px;
-    bottom: 4px;
-    background-color: white;
-    transition: 0.4s cubic-bezier(0.4, 0.0, 0.2, 1);
-    border-radius: 50%;
-    z-index: 2;
-}
-
-/* Cuando marcamos el checkbox (Día) */
-input:checked + .slider {
-    background-color: #f1c40f; /* Fondo modo claro (Sol) */
-}
-
-/* Movemos la bolita a la derecha */
-input:checked + .slider:before {
-    transform: translateX(28px);
-}
-
-/* =========================================
-   🎨 COLORES DEL MODO OSCURO (Ajusta a tu gusto)
-   ========================================= */
-body.dark-mode {
-    background-color: #121212;
-    color: #e0e0e0;
-}
-
-body.dark-mode .panel,
-body.dark-mode .modal-content {
-    background-color: #1e1e1e;
-    border-color: #333;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-}
-
-body.dark-mode .tabla-header {
-    background-color: #2c3e50;
-    color: #ffffff;
-}
-
-body.dark-mode .operacion-row {
-    border-bottom: 1px solid #333;
-}
-
-body.dark-mode .operacion-row:hover {
-    background-color: #2a2a2a;
-}
-
-/* =========================================
-   🎨 BARRA DE FILTROS MODO OSCURO
-   ========================================= */
-/* Fondo de la barra contenedora (un gris distinto al fondo principal) */
-body.dark-mode .filtros {
-    background-color: #1e2124; 
-    border-color: #2f3136;
-}
-
-/* Color de los campos de texto y desplegables */
-body.dark-mode input,
-body.dark-mode select {
-    background-color: #2f3136;
-    color: #e0e0e0;
-    border: 1px solid #40444b;
-}
-
-/* Color del texto de "Buscar por código..." para que se lea bien */
-body.dark-mode input::placeholder {
-    color: #99aab5;
-}
-
-/* Si tuvieras algún botón dentro de los filtros que no sea primary/secondary */
-body.dark-mode .filtros button {
-    border: 1px solid #40444b;
-}
-
-/* Color del fondo y texto de las opciones del desplegable */
-body.dark-mode select option {
-    background-color: #2f3136;
-    color: #e0e0e0;
-}
-
-/* 🪄 TOQUE MÁGICO: Obliga al navegador a usar su tema oscuro nativo para barras de scroll y menús */
-body.dark-mode {
-    color-scheme: dark;
-}
-

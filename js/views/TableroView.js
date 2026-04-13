@@ -32,8 +32,14 @@ export class TableroView {
     }
 
     generarFilaHTML(operacion, operador, punto, esGestor) {
-        // --- LÓGICA DE FECHAS (Hoy, Mañana, Otros) --- 📅
+        // --- 📅 LÓGICA DE FECHAS (Hoy, Mañana, Otros) --- 
         const fechaOperacion = new Date(operacion.horaProgramada);
+        
+        // 🔴 Comprobar si la fecha es pasada (para poner en rojo)
+        const timestampOperacion = fechaOperacion.getTime();
+        const esPasada = timestampOperacion < Date.now();
+        // En vez de clase de CSS, inyectamos el estilo directo rojo brillante si es pasada
+        const estiloColorFecha = esPasada ? "color: #ff4d4d; font-weight: bold;" : ""; 
         
         // Obtenemos el inicio del día actual
         const fechaHoy = new Date();
@@ -43,7 +49,7 @@ export class TableroView {
         const fechaManana = new Date(fechaHoy);
         fechaManana.setDate(fechaManana.getDate() + 1);
         
-        // Obtenemos el inicio del día de la operación (para comparar peras con peras)
+        // Obtenemos el inicio del día de la operación
         const diaOperacion = new Date(fechaOperacion);
         diaOperacion.setHours(0, 0, 0, 0);
 
@@ -52,18 +58,27 @@ export class TableroView {
         const formatoSoloFecha = fechaOperacion.toLocaleDateString();
 
         if (diaOperacion.getTime() === fechaHoy.getTime()) {
-            textoFechaHora = formatoSoloHora; // Si es Hoy -> "14:30"
+            textoFechaHora = formatoSoloHora; 
         } else if (diaOperacion.getTime() === fechaManana.getTime()) {
-            textoFechaHora = `M-${formatoSoloHora}`; // Si es Mañana -> "M-14:30"
+            textoFechaHora = `M-${formatoSoloHora}`; 
         } else {
-            textoFechaHora = formatoSoloFecha; // Si es otro día -> "15/04/2026"
+            textoFechaHora = formatoSoloFecha; 
         }
+
+        // --- 🟧 LÓGICA DE ICONOS Y EMOJIS ---
+        const urlIcono = operador ? operador.urlIcono : "🟧";
+        const siglasOperador = operador ? operador.siglas : "N/A";
+        
+        // Ahora detecta si empieza por http, si tiene una barra de carpeta (/) o un punto de extensión (.png)
+        const esImagen = urlIcono && (urlIcono.startsWith("http") || urlIcono.includes("/") || urlIcono.includes("."));
+
+        const htmlIcono = esImagen
+            ? `<img src="${urlIcono}" alt="${siglasOperador}" width="20" style="margin-right: 5px; vertical-align: middle;">`
+            : `<span style="font-size: 1.2rem; margin-right: 5px; vertical-align: middle;">${urlIcono}</span>`;
 
         // --- RESTO DE DATOS ---
         const ciudadDestinoOrigen = operacion.sentido === "salida" ? operacion.destino : operacion.origen;
         const nombreOperador = operador ? operador.nombre : "Desconocido";
-        const iconoOperador = operador ? operador.urlIcono : ""; 
-        const siglasOperador = operador ? operador.siglas : "N/A";
 
         let htmlAccionesAdmin = "";
         if (esGestor) {
@@ -77,11 +92,11 @@ export class TableroView {
 
         return `
             <article class="operacion-row" data-id="${operacion.operacionId}">
-                <span>${textoFechaHora}</span>
+                <span style="${estiloColorFecha}">${textoFechaHora}</span>
                 <span style="font-weight: bold; color: var(--accent-blue, #0f3460);">${operacion.codigo}</span>
                 <span>${ciudadDestinoOrigen}</span>
                 <span class="operador-info">
-                    ${operador ? `<img src="${iconoOperador}" alt="${siglasOperador}" width="20">` : "❓"} 
+                    ${htmlIcono} 
                     ${nombreOperador}
                 </span>
                 <span>${punto ? punto.codigo : "---"}</span>

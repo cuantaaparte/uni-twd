@@ -10,7 +10,7 @@ const TIEMPO_REFRESCO_MS = 60000;
 const LONGITUD_ULID = 26;
 const ROL_GESTOR = "GESTOR";
 const ROL_PUBLICO = "PÚBLICO";
-const ICONO_POR_DEFECTO = "https://cdn-icons-png.flaticon.com/512/782/782073.png";
+const ICONO_POR_DEFECTO = "🟧"; // 🟧 EMOJI ACTUALIZADO
 
 // --- HELPERS ---
 function generarULID() {
@@ -32,15 +32,16 @@ const normalizarIdColumna = (textoColumna) => {
 document.addEventListener("DOMContentLoaded", () => {
     // --- 🌓 LÓGICA DEL MODO OSCURO ---
     const botonTema = document.getElementById("checkbox-theme");
-    const temaGuardado = localStorage.getItem("tema");
+    // 🌙 Default a 'dark' si el usuario es nuevo
+    const temaGuardado = localStorage.getItem("tema") || "dark";
 
-    // 1. Mirar la mochila: ¿Teníamos el modo oscuro activado antes?
+    // 1. Aplicar estado inicial
     if (temaGuardado === "dark") {
         document.body.classList.add("dark-mode");
-        if (botonTema) botonTema.checked = false; // Ajustamos la bolita visualmente
+        if (botonTema) botonTema.checked = false; // Checkbox apagado = Noche
     } else {
-        // Por defecto lo ponemos en día
-        if (botonTema) botonTema.checked = true;
+        document.body.classList.remove("dark-mode");
+        if (botonTema) botonTema.checked = true;  // Checkbox encendido = Día
     }
 
     // 2. Escuchar clics en el botón
