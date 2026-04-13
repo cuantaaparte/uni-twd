@@ -4,68 +4,70 @@ export class TableroView {
     constructor() {
         this.listaSalidas = document.getElementById("lista-salidas");
         this.listaLlegadas = document.getElementById("lista-llegadas");
-        this.panelSalidas = document.getElementById("panel-salidas"); // 🆕 Para el CSS
-        this.panelLlegadas = document.getElementById("panel-llegadas"); // 🆕 Para el CSS
+        this.panelSalidas = document.getElementById("panel-salidas");
+        this.panelLlegadas = document.getElementById("panel-llegadas");
     }
 
-    // Recibimos salidas y llegadas por separado
+    // Recibimos salidas y llegadas filtradas y ordenadas
     render(salidas, llegadas, operadores, puntos, usuarioActivo = null) {
         this.listaSalidas.innerHTML = "";
         this.listaLlegadas.innerHTML = "";
 
         const esGestor = usuarioActivo && usuarioActivo.rol === "GESTOR";
 
-        // Aplicamos clases de modo gestor
-        [this.panelSalidas, this.panelLlegadas].forEach(p => 
-            esGestor ? p.classList.add("modo-gestor") : p.classList.remove("modo-gestor")
+        // Aplicamos clases de modo gestor para UI adaptativa
+        [this.panelSalidas, this.panelLlegadas].forEach(panel => 
+            esGestor ? panel.classList.add("modo-gestor") : panel.classList.remove("modo-gestor")
         );
 
-        // Pintamos salidas
-        salidas.forEach(op => {
-            const operador = operadores.find(o => o.operadorId === op.operadorId);
-            const punto = puntos.find(p => p.puntoId === op.puntoId);
-            this.listaSalidas.innerHTML += this.generarFilaHTML(op, operador, punto, esGestor);
+        // Renderizamos panel de salidas
+        salidas.forEach(operacion => {
+            const operadorEncontrado = operadores.find(operador => operador.operadorId === operacion.operadorId);
+            const puntoEncontrado = puntos.find(punto => punto.puntoId === operacion.puntoId);
+            this.listaSalidas.innerHTML += this.generarFilaHTML(operacion, operadorEncontrado, puntoEncontrado, esGestor);
         });
 
-        // Pintamos llegadas
-        llegadas.forEach(op => {
-            const operador = operadores.find(o => o.operadorId === op.operadorId);
-            const punto = puntos.find(p => p.puntoId === op.puntoId);
-            this.listaLlegadas.innerHTML += this.generarFilaHTML(op, operador, punto, esGestor);
+        // Renderizamos panel de llegadas
+        llegadas.forEach(operacion => {
+            const operadorEncontrado = operadores.find(operador => operador.operadorId === operacion.operadorId);
+            const puntoEncontrado = puntos.find(punto => punto.puntoId === operacion.puntoId);
+            this.listaLlegadas.innerHTML += this.generarFilaHTML(operacion, operadorEncontrado, puntoEncontrado, esGestor);
         });
     }
 
-    generarFilaHTML(op, operador, punto, esGestor) {
-        const hora = new Date(op.horaProgramada).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-        const ciudad = op.sentido === "salida" ? op.destino : op.origen;
+    generarFilaHTML(operacion, operador, punto, esGestor) {
+        const horaFormateada = new Date(operacion.horaProgramada).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+        const ciudadDestinoOrigen = operacion.sentido === "salida" ? operacion.destino : operacion.origen;
 
-        const nombreOp = operador ? operador.nombre : "Desconocido";
-        const iconoOp = operador ? operador.urlIcono : ""; 
-        const siglasOp = operador ? operador.siglas : "N/A";
+        const nombreOperador = operador ? operador.nombre : "Desconocido";
+        const iconoOperador = operador ? operador.urlIcono : ""; 
+        const siglasOperador = operador ? operador.siglas : "N/A";
 
-        // 🆕 Generamos los botones de acción SOLO si es gestor
-        let htmlAcciones = "";
+        // Controles exclusivos para usuarios con rol GESTOR
+        let htmlAccionesAdmin = "";
         if (esGestor) {
-            htmlAcciones = `
-                <div class="acciones-gestor">
-                    <button class="btn-icon btn-editar" data-id="${op.operacionId}" title="Editar">✏️</button>
-                    <button class="btn-icon btn-borrar" data-id="${op.operacionId}" title="Borrar">🗑️</button>
-                </div>
+            htmlAccionesAdmin = `
+                <nav class="acciones-gestor">
+                    <button class="btn-icon btn-editar" data-id="${operacion.operacionId}" title="Editar">✏️</button>
+                    <button class="btn-icon btn-borrar" data-id="${operacion.operacionId}" title="Borrar">🗑️</button>
+                </nav>
             `;
         }
 
+        // Usamos <article> para la fila semántica
         return `
-            <div class="operacion-row" data-id="${op.operacionId}">
-                <span>${hora}</span>
-                <span style="font-weight: bold; color: #0f3460;">${op.codigo}</span>
-                <span>${ciudad}</span>
+            <article class="operacion-row" data-id="${operacion.operacionId}">
+                <span>${horaFormateada}</span>
+                <span style="font-weight: bold; color: var(--accent-blue, #0f3460);">${operacion.codigo}</span>
+                <span>${ciudadDestinoOrigen}</span>
                 <span class="operador-info">
-                    ${operador ? `<img src="${iconoOp}" alt="${siglasOp}" width="20">` : "❓"} 
-                    ${nombreOp}
+                    ${operador ? `<img src="${iconoOperador}" alt="${siglasOperador}" width="20">` : "❓"} 
+                    ${nombreOperador}
                 </span>
                 <span>${punto ? punto.codigo : "---"}</span>
-                <span class="estado-tag state-${op.estado.toLowerCase()}">${op.estado}</span>
-                ${htmlAcciones} </div>
+                <span class="estado-tag state-${operacion.estado.toLowerCase()}">${operacion.estado}</span>
+                ${htmlAccionesAdmin} 
+            </article>
         `;
     }
 }

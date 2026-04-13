@@ -5,19 +5,37 @@ import { TableroView } from "./views/TableroView.js";
 import { AuthView } from "./views/AuthView.js";
 import { Usuario, ROLES_USUARIO } from "./models/Usuario.js";
 
+// --- CONSTANTES GLOBALES (Clean Code) ---
+const TIEMPO_REFRESCO_MS = 60000;
+const LONGITUD_ULID = 26;
+const ROL_GESTOR = "GESTOR";
+const ROL_PUBLICO = "PÚBLICO";
+const ICONO_POR_DEFECTO = "https://cdn-icons-png.flaticon.com/512/782/782073.png";
+
 // --- HELPERS ---
+
+/**
+ * Genera un identificador único alfanumérico (ULID) de 26 caracteres.
+ * Obligatorio por enunciado para identificar operaciones sin dependencias externas.
+ */
 function generarULID() {
-    const chars = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
-    let ulid = '';
-    for (let i = 0; i < 26; i++) {
-        ulid += chars[Math.floor(Math.random() * chars.length)];
+    const caracteresPermitidos = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
+    let ulidGenerado = '';
+    for (let i = 0; i < LONGITUD_ULID; i++) {
+        ulidGenerado += caracteresPermitidos[Math.floor(Math.random() * caracteresPermitidos.length)];
     }
-    return ulid;
+    return ulidGenerado;
 }
 
-const normalizarID = (txt) => {
-    return txt.replace(/[⬆️⬇️]/g, "").trim().toUpperCase()
-              .normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+/**
+ * Limpia el texto de las cabeceras de la tabla para usarlas como identificador de ordenación.
+ * Elimina flechas, espacios y tildes para evitar errores de comparación al hacer clic.
+ */
+const normalizarIdColumna = (textoColumna) => {
+    return textoColumna.replace(/[⬆️⬇️]/g, "")
+                       .trim()
+                       .toUpperCase()
+                       .normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 };
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -33,153 +51,168 @@ document.addEventListener("DOMContentLoaded", () => {
     let usuarioActivo = JSON.parse(sessionStorage.getItem("usuarioActivo"));
     authView.renderAuthButtons(usuarioActivo);
 
-    // --- ESTADO DE ORDENACIÓN ---
+    // --- ESTADO GLOBAL DE ORDENACIÓN ---
     let columnaActivaID = "HORA"; 
     let ordenAscendente = true;
 
-    // --- FUNCIÓN MAESTRA ---
+    // --- FUNCIÓN MAESTRA: FILTRAR, ORDENAR Y PINTAR ---
     const aplicarFiltros = () => {
-        const operacionesActuales = JSON.parse(localStorage.getItem("operaciones")) || [];
-        const operadoresAct = JSON.parse(localStorage.getItem("operadores")) || [];
-        const puntosAct = JSON.parse(localStorage.getItem("puntos")) || [];
+        const operacionesGuardadas = JSON.parse(localStorage.getItem("operaciones")) || [];
+        const operadoresGuardados = JSON.parse(localStorage.getItem("operadores")) || [];
+        const puntosGuardados = JSON.parse(localStorage.getItem("puntos")) || [];
         
-        const textoCriterio = inputBusqueda.value.trim().toLowerCase();
-        const estadoCriterio = selectEstado.value;
+        const textoCriterioBusqueda = inputBusqueda.value.trim().toLowerCase();
+        const estadoCriterioSeleccionado = selectEstado.value;
 
-        // FILTRAR
-        const filtradas = operacionesActuales.filter(op => {
-            const coincideCodigo = op.codigo.toLowerCase().includes(textoCriterio);
-            const coincideEstado = estadoCriterio === "TODOS" || op.estado === estadoCriterio;
+        // 1. FILTRADO
+        const operacionesFiltradas = operacionesGuardadas.filter(operacion => {
+            const coincideCodigo = operacion.codigo.toLowerCase().includes(textoCriterioBusqueda);
+            const coincideEstado = estadoCriterioSeleccionado === "TODOS" || operacion.estado === estadoCriterioSeleccionado;
             return coincideCodigo && coincideEstado;
         });
 
-        // SEPARAR
-        let salidas = filtradas.filter(op => op.sentido === "salida");
-        let llegadas = filtradas.filter(op => op.sentido === "llegada");
+        // 2. SEPARAR POR PANELES
+        let listaSalidas = operacionesFiltradas.filter(operacion => operacion.sentido === "salida");
+        let listaLlegadas = operacionesFiltradas.filter(operacion => operacion.sentido === "llegada");
 
-        // ORDENAR
-        const ordenar = (lista) => {
-            return lista.sort((a, b) => {
-                let valA, valB;
-                const ID = normalizarID(columnaActivaID);
+        // 3. ORDENACIÓN INDEPENDIENTE
+        const ordenarListaOperaciones = (listaOperaciones) => {
+            return listaOperaciones.sort((operacionA, operacionB) => {
+                let valorOrdenacionA, valorOrdenacionB;
+                const idColumnaLimpio = normalizarIdColumna(columnaActivaID);
 
-                switch (ID) {
+                switch (idColumnaLimpio) {
                     case "HORA":
-                        const d1 = new Date(a.horaProgramada);
-                        const d2 = new Date(b.horaProgramada);
-                        valA = d1.getHours() * 60 + d1.getMinutes();
-                        valB = d2.getHours() * 60 + d2.getMinutes();
+                        const fecha1 = new Date(operacionA.horaProgramada);
+                        const fecha2 = new Date(operacionB.horaProgramada);
+                        valorOrdenacionA = fecha1.getHours() * 60 + fecha1.getMinutes();
+                        valorOrdenacionB = fecha2.getHours() * 60 + fecha2.getMinutes();
                         break;
                     case "CODIGO":
-                        valA = a.codigo.toLowerCase();
-                        valB = b.codigo.toLowerCase();
+                        valorOrdenacionA = operacionA.codigo.toLowerCase();
+                        valorOrdenacionB = operacionB.codigo.toLowerCase();
                         break;
                     case "DESTINO":
                     case "ORIGEN":
-                        valA = (a.sentido === "salida" ? a.destino : a.origen).toLowerCase();
-                        valB = (b.sentido === "salida" ? b.destino : b.origen).toLowerCase();
+                        valorOrdenacionA = (operacionA.sentido === "salida" ? operacionA.destino : operacionA.origen).toLowerCase();
+                        valorOrdenacionB = (operacionB.sentido === "salida" ? operacionB.destino : operacionB.origen).toLowerCase();
                         break;
                     case "OPERADOR":
-                        valA = (operadoresAct.find(o => o.operadorId === a.operadorId)?.nombre || "").toLowerCase();
-                        valB = (operadoresAct.find(o => o.operadorId === b.operadorId)?.nombre || "").toLowerCase();
+                        valorOrdenacionA = (operadoresGuardados.find(op => op.operadorId === operacionA.operadorId)?.nombre || "").toLowerCase();
+                        valorOrdenacionB = (operadoresGuardados.find(op => op.operadorId === operacionB.operadorId)?.nombre || "").toLowerCase();
                         break;
                     case "PUERTA/VIA":
                     case "PUERTA":
                     case "VIA":
-                        valA = (puntosAct.find(p => p.puntoId === a.puntoId)?.codigo || "").toLowerCase();
-                        valB = (puntosAct.find(p => p.puntoId === b.puntoId)?.codigo || "").toLowerCase();
+                        valorOrdenacionA = (puntosGuardados.find(pt => pt.puntoId === operacionA.puntoId)?.codigo || "").toLowerCase();
+                        valorOrdenacionB = (puntosGuardados.find(pt => pt.puntoId === operacionB.puntoId)?.codigo || "").toLowerCase();
                         break;
                     case "ESTADO":
-                        valA = a.estado.toLowerCase();
-                        valB = b.estado.toLowerCase();
+                        valorOrdenacionA = operacionA.estado.toLowerCase();
+                        valorOrdenacionB = operacionB.estado.toLowerCase();
                         break;
                     default: return 0;
                 }
 
-                if (valA < valB) return ordenAscendente ? -1 : 1;
-                if (valA > valB) return ordenAscendente ? 1 : -1;
+                if (valorOrdenacionA < valorOrdenacionB) return ordenAscendente ? -1 : 1;
+                if (valorOrdenacionA > valorOrdenacionB) return ordenAscendente ? 1 : -1;
                 return 0;
             });
         };
 
-        salidas = ordenar(salidas);
-        llegadas = ordenar(llegadas);
+        listaSalidas = ordenarListaOperaciones(listaSalidas);
+        listaLlegadas = ordenarListaOperaciones(listaLlegadas);
 
-        tablero.render(salidas, llegadas, operadoresAct, puntosAct, usuarioActivo);
-        renderizarInterfazAdmin(usuarioActivo);
+        // 4. PINTADO DE VISTA
+        tablero.render(listaSalidas, listaLlegadas, operadoresGuardados, puntosGuardados, usuarioActivo);
+        renderizarInterfazAdministracion(usuarioActivo);
     };
 
-    // --- INTERFAZ ---
-    const renderizarInterfazAdmin = (user) => {
+    // --- RENDERIZADO DE INTERFAZ CONDICIONAL ---
+    const renderizarInterfazAdministracion = (usuarioActual) => {
         const contenedorFiltros = document.querySelector(".filtros");
         const contenedorAuth = document.querySelector(".auth-buttons");
-        let infoUser = document.getElementById("info-usuario-activo");
+        let infoUsuarioLogueado = document.getElementById("info-usuario-activo");
 
-        if (user) {
-            if (!infoUser) {
-                infoUser = document.createElement("span");
-                infoUser.id = "info-usuario-activo";
-                infoUser.style.color = "white";
-                infoUser.style.marginRight = "15px";
-                infoUser.style.alignSelf = "center";
-                contenedorAuth.prepend(infoUser);
+        // Info de usuario superior
+        if (usuarioActual) {
+            if (!infoUsuarioLogueado) {
+                infoUsuarioLogueado = document.createElement("span");
+                infoUsuarioLogueado.id = "info-usuario-activo";
+                infoUsuarioLogueado.style.color = "white";
+                infoUsuarioLogueado.style.marginRight = "15px";
+                infoUsuarioLogueado.style.alignSelf = "center";
+                contenedorAuth.prepend(infoUsuarioLogueado);
             }
-            const colorRol = user.rol === "GESTOR" ? "#2ecc71" : "#3498db";
-            infoUser.innerHTML = `👤 ${user.email} <strong style="color: ${colorRol}; margin-left: 5px;">[${user.rol}]</strong>`;
-        } else if (infoUser) infoUser.remove();
+            const colorDistintivoRol = usuarioActual.rol === ROL_GESTOR ? "#2ecc71" : "#3498db";
+            infoUsuarioLogueado.innerHTML = `👤 ${usuarioActual.email} <strong style="color: ${colorDistintivoRol}; margin-left: 5px;">[${usuarioActual.rol}]</strong>`;
+        } else if (infoUsuarioLogueado) {
+            infoUsuarioLogueado.remove();
+        }
 
-        const toggleBtn = (id, show, texto, clase, bg) => {
-            let btn = document.getElementById(id);
-            if (show && !btn) {
-                btn = document.createElement("button");
-                btn.id = id;
-                btn.className = clase;
-                btn.style.marginLeft = "10px";
-                if(bg) btn.style.backgroundColor = bg;
-                btn.innerText = texto;
-                if(contenedorFiltros) contenedorFiltros.appendChild(btn);
-            } else if (!show && btn) btn.remove();
+        // Creador dinámico de botones
+        const alternarBotonAdmin = (idBoton, mostrar, textoBoton, claseEstilo, colorFondoOpcional) => {
+            let botonElemento = document.getElementById(idBoton);
+            if (mostrar && !botonElemento) {
+                botonElemento = document.createElement("button");
+                botonElemento.id = idBoton;
+                botonElemento.className = claseEstilo;
+                botonElemento.style.marginLeft = "10px";
+                if(colorFondoOpcional) botonElemento.style.backgroundColor = colorFondoOpcional;
+                botonElemento.innerText = textoBoton;
+                if(contenedorFiltros) contenedorFiltros.appendChild(botonElemento);
+            } else if (!mostrar && botonElemento) {
+                botonElemento.remove();
+            }
         };
 
-        const esGestor = user && user.rol === "GESTOR";
-        toggleBtn("btn-nueva-operacion", esGestor, "➕ Nueva Operación", "btn-primary", "#2ecc71");
-        toggleBtn("btn-gestionar-usuarios", esGestor, "👥 Usuarios", "btn-secondary");
-        toggleBtn("btn-gestionar-operadores", esGestor, "🏢 Operadores", "btn-secondary");
-        toggleBtn("btn-gestionar-puntos", esGestor, "🚪 Puntos", "btn-secondary");
+        const tienePermisosGestor = usuarioActual && usuarioActual.rol === ROL_GESTOR;
+        alternarBotonAdmin("btn-nueva-operacion", tienePermisosGestor, "➕ Nueva Operación", "btn-primary", "#2ecc71");
+        alternarBotonAdmin("btn-gestionar-usuarios", tienePermisosGestor, "👥 Usuarios", "btn-secondary");
+        alternarBotonAdmin("btn-gestionar-operadores", tienePermisosGestor, "🏢 Operadores", "btn-secondary");
+        alternarBotonAdmin("btn-gestionar-puntos", tienePermisosGestor, "🚪 Puntos", "btn-secondary");
     };
 
+    // Eventos Filtros Principales
     if(inputBusqueda) inputBusqueda.addEventListener("input", aplicarFiltros);
     if(selectEstado) selectEstado.addEventListener("change", aplicarFiltros);
 
     /* =========================================
-       🔐 LÓGICA AUTH
+       🔐 LÓGICA DE AUTENTICACIÓN
        ========================================= */
     document.getElementById("btn-login")?.addEventListener("click", () => authView.show(false));
     document.getElementById("btn-signup")?.addEventListener("click", () => authView.show(true));
     document.getElementById("close-modal")?.addEventListener("click", () => authView.hide());
 
-    document.getElementById("auth-form")?.addEventListener("submit", (e) => {
-        e.preventDefault();
-        const email = document.getElementById("auth-email").value;
-        const pass = document.getElementById("auth-password").value;
-        const modo = e.target.dataset.mode;
-        const usuarios = JSON.parse(localStorage.getItem("usuarios")) || [];
+    document.getElementById("auth-form")?.addEventListener("submit", (eventoValidacion) => {
+        eventoValidacion.preventDefault();
+        const emailIntroducido = document.getElementById("auth-email").value;
+        const passwordIntroducida = document.getElementById("auth-password").value;
+        const modoFormulario = eventoValidacion.target.dataset.mode;
+        const usuariosGuardados = JSON.parse(localStorage.getItem("usuarios")) || [];
 
-        if (modo === "login") {
-            const user = usuarios.find(u => u.email === email && u.password === pass);
-            if (user) {
-                sessionStorage.setItem("usuarioActivo", JSON.stringify(user));
-                usuarioActivo = user;
+        if (modoFormulario === "login") {
+            const usuarioValido = usuariosGuardados.find(usuario => usuario.email === emailIntroducido && usuario.password === passwordIntroducida);
+            if (usuarioValido) {
+                sessionStorage.setItem("usuarioActivo", JSON.stringify(usuarioValido));
+                usuarioActivo = usuarioValido;
                 authView.hide();
                 authView.renderAuthButtons(usuarioActivo);
                 aplicarFiltros();
-            } else alert("Credenciales incorrectas ❌");
+            } else {
+                alert("Credenciales incorrectas ❌");
+            }
         } else {
-            if (usuarios.some(u => u.email === email)) return alert("Email ya existe");
-            if (pass.length <= 8 || !/\d/.test(pass)) return alert("Contraseña: >8 chars + 1 número");
-            usuarios.push(new Usuario(email, pass, ROLES_USUARIO.PUBLICO));
-            localStorage.setItem("usuarios", JSON.stringify(usuarios));
-            alert("Cuenta creada.");
+            if (usuariosGuardados.some(usuario => usuario.email === emailIntroducido)) {
+                return alert("El Email introducido ya existe");
+            }
+            if (passwordIntroducida.length <= 8 || !/\d/.test(passwordIntroducida)) {
+                return alert("La contraseña debe tener más de 8 caracteres y contener al menos 1 número");
+            }
+            
+            usuariosGuardados.push(new Usuario(emailIntroducido, passwordIntroducida, ROLES_USUARIO.PUBLICO));
+            localStorage.setItem("usuarios", JSON.stringify(usuariosGuardados));
+            alert("Cuenta creada con éxito.");
             authView.show(false); 
         }
     });
@@ -190,95 +223,101 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     /* =========================================
-       ✨ INTERACTIVIDAD TABLA (Delegación)
+       ✨ INTERACTIVIDAD TABLA (Delegación Principal)
        ========================================= */
     document.getElementById("close-modal-detalle")?.addEventListener("click", () => document.getElementById("modal-detalle").classList.add("hidden"));
 
-    const tablerosContainer = document.querySelector(".tableros-container");
-    if(tablerosContainer) {
-        tablerosContainer.addEventListener("click", (e) => {
+    const tablerosContenedorGlobal = document.querySelector(".tableros-container");
+    if(tablerosContenedorGlobal) {
+        tablerosContenedorGlobal.addEventListener("click", (eventoClic) => {
             
-            // ↕️ CABECERAS
-            const cabecera = e.target.closest(".tabla-header span") || (e.target.parentElement?.classList.contains("tabla-header") ? e.target : null);
-            if (cabecera) {
-                const idClicado = normalizarID(cabecera.innerText);
-                if (idClicado === "ACCIONES") return; 
+            // ↕️ CLIC EN CABECERAS PARA ORDENACIÓN
+            const cabeceraClicada = eventoClic.target.closest(".tabla-header span") || (eventoClic.target.parentElement?.classList.contains("tabla-header") ? eventoClic.target : null);
+            if (cabeceraClicada) {
+                const idColumnaClicada = normalizarIdColumna(cabeceraClicada.innerText);
+                if (idColumnaClicada === "ACCIONES") return; 
 
-                if (normalizarID(columnaActivaID) === idClicado) {
-                    ordenAscendente = !ordenAscendente;
+                if (normalizarIdColumna(columnaActivaID) === idColumnaClicada) {
+                    ordenAscendente = !ordenAscendente; // Invertir orden si es la misma columna
                 } else {
-                    columnaActivaID = idClicado;
+                    columnaActivaID = idColumnaClicada; // Nueva columna, reiniciar a ascendente
                     ordenAscendente = true;
                 }
 
-                document.querySelectorAll(".tabla-header span").forEach(span => {
-                    const esteID = normalizarID(span.innerText);
-                    const textoOriginal = span.innerText.replace(/[⬆️⬇️]/g, "").trim();
-                    if (esteID === idClicado) {
-                        span.innerText = textoOriginal + (ordenAscendente ? " ⬆️" : " ⬇️");
+                // Actualización visual de flechas
+                document.querySelectorAll(".tabla-header span").forEach(cabeceraSpan => {
+                    const idCabeceraIterada = normalizarIdColumna(cabeceraSpan.innerText);
+                    const textoBaseLimpio = cabeceraSpan.innerText.replace(/[⬆️⬇️]/g, "").trim();
+                    if (idCabeceraIterada === idColumnaClicada) {
+                        cabeceraSpan.innerText = textoBaseLimpio + (ordenAscendente ? " ⬆️" : " ⬇️");
                     } else {
-                        span.innerText = textoOriginal;
+                        cabeceraSpan.innerText = textoBaseLimpio;
                     }
                 });
                 aplicarFiltros();
                 return;
             }
 
-            // 🗑️ BORRAR
-            const btnBorrar = e.target.closest(".btn-borrar");
-            if (btnBorrar) {
-                const id = btnBorrar.getAttribute("data-id");
-                if (confirm("¿Borrar definitivamente?")) {
-                    let ops = JSON.parse(localStorage.getItem("operaciones")) || [];
-                    localStorage.setItem("operaciones", JSON.stringify(ops.filter(o => o.operacionId !== id)));
+            // 🗑️ BORRAR OPERACIÓN
+            const botonBorrarOperacion = eventoClic.target.closest(".btn-borrar");
+            if (botonBorrarOperacion) {
+                const idOperacionEliminar = botonBorrarOperacion.getAttribute("data-id");
+                if (confirm("⚠️ ¿Deseas borrar definitivamente esta operación?")) {
+                    let operacionesExistentes = JSON.parse(localStorage.getItem("operaciones")) || [];
+                    localStorage.setItem("operaciones", JSON.stringify(operacionesExistentes.filter(operacion => operacion.operacionId !== idOperacionEliminar)));
                     aplicarFiltros();
                 }
                 return;
             }
 
-            // ✏️ EDITAR
-            const btnEditar = e.target.closest(".btn-editar");
-            if (btnEditar) {
-                const id = btnEditar.getAttribute("data-id");
-                const ops = JSON.parse(localStorage.getItem("operaciones")) || [];
-                const op = ops.find(o => o.operacionId === id);
-                if (op) {
-                    document.getElementById("op-id").value = op.operacionId;
-                    document.getElementById("op-estado").value = op.estado;
-                    const opers = JSON.parse(localStorage.getItem("operadores")) || [];
-                    const pts = JSON.parse(localStorage.getItem("puntos")) || [];
-                    document.getElementById("op-operador").innerHTML = opers.map(o => `<option value="${o.operadorId}" ${o.operadorId === op.operadorId ? 'selected' : ''}>${o.nombre}</option>`).join("");
-                    document.getElementById("op-punto").innerHTML = pts.map(p => `<option value="${p.puntoId}" ${p.puntoId === op.puntoId ? 'selected' : ''}>${p.codigo}</option>`).join("");
+            // ✏️ EDITAR OPERACIÓN
+            const botonEditarOperacion = eventoClic.target.closest(".btn-editar");
+            if (botonEditarOperacion) {
+                const idOperacionEditar = botonEditarOperacion.getAttribute("data-id");
+                const operacionesExistentes = JSON.parse(localStorage.getItem("operaciones")) || [];
+                const operacionEncontrada = operacionesExistentes.find(operacion => operacion.operacionId === idOperacionEditar);
+                
+                if (operacionEncontrada) {
+                    document.getElementById("op-id").value = operacionEncontrada.operacionId;
+                    document.getElementById("op-estado").value = operacionEncontrada.estado;
+                    
+                    const operadoresExistentes = JSON.parse(localStorage.getItem("operadores")) || [];
+                    const puntosExistentes = JSON.parse(localStorage.getItem("puntos")) || [];
+                    
+                    document.getElementById("op-operador").innerHTML = operadoresExistentes.map(operador => `<option value="${operador.operadorId}" ${operador.operadorId === operacionEncontrada.operadorId ? 'selected' : ''}>${operador.nombre}</option>`).join("");
+                    document.getElementById("op-punto").innerHTML = puntosExistentes.map(punto => `<option value="${punto.puntoId}" ${punto.puntoId === operacionEncontrada.puntoId ? 'selected' : ''}>${punto.codigo}</option>`).join("");
+                    
                     document.getElementById("modal-operacion")?.classList.remove("hidden");
                 }
                 return;
             }
 
-            // 🔍 DETALLE
-            const fila = e.target.closest(".operacion-row");
-            if (fila && !e.target.closest(".acciones-gestor")) { 
-                const id = fila.getAttribute("data-id");
-                const ops = JSON.parse(localStorage.getItem("operaciones")) || [];
-                const op = ops.find(o => o.operacionId === id);
-                if (op) {
-                    const opers = JSON.parse(localStorage.getItem("operadores")) || [];
-                    const oper = opers.find(o => o.operadorId === op.operadorId);
-                    const pto = (JSON.parse(localStorage.getItem("puntos")) || []).find(p => p.puntoId === op.puntoId);
+            // 🔍 VISTA DETALLE DE OPERACIÓN
+            const filaTablaClicada = eventoClic.target.closest(".operacion-row");
+            if (filaTablaClicada && !eventoClic.target.closest(".acciones-gestor")) { 
+                const idOperacionDetalle = filaTablaClicada.getAttribute("data-id");
+                const operacionesExistentes = JSON.parse(localStorage.getItem("operaciones")) || [];
+                const operacionEncontrada = operacionesExistentes.find(operacion => operacion.operacionId === idOperacionDetalle);
+                
+                if (operacionEncontrada) {
+                    const operadoresExistentes = JSON.parse(localStorage.getItem("operadores")) || [];
+                    const operadorEncontrado = operadoresExistentes.find(operador => operador.operadorId === operacionEncontrada.operadorId);
+                    const puntoEncontrado = (JSON.parse(localStorage.getItem("puntos")) || []).find(punto => punto.puntoId === operacionEncontrada.puntoId);
                     
-                    const horaProg = new Date(op.horaProgramada).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' });
-                    const horaEst = new Date(op.horaEstimada).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' });
+                    const fechaHoraProgramada = new Date(operacionEncontrada.horaProgramada).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' });
+                    const fechaHoraEstimada = new Date(operacionEncontrada.horaEstimada).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' });
 
                     document.getElementById("detalle-contenido").innerHTML = `
-                        <p>🏷️ <strong>Código:</strong> ${op.codigo}</p>
-                        <p>🚏 <strong>Tipo:</strong> ${op.tipo.toUpperCase()}</p>
-                        <p>🗺️ <strong>Trayecto:</strong> ${op.origen} ➡️ ${op.destino}</p>
-                        <p>🏢 <strong>Operador:</strong> ${oper ? oper.nombre : 'N/A'}</p>
-                        <p>🚪 <strong>Puerta/Vía:</strong> ${pto ? pto.codigo : 'N/A'}</p>
-                        <p>🕒 <strong>Hora Programada:</strong> ${horaProg}</p>
-                        <p>⏳ <strong>Hora Estimada:</strong> ${horaEst}</p>
-                        <p>🚦 <strong>Estado:</strong> <span class="estado-tag state-${op.estado.toLowerCase()}">${op.estado}</span></p>
+                        <p>🏷️ <strong>Código:</strong> ${operacionEncontrada.codigo}</p>
+                        <p>🚏 <strong>Tipo:</strong> ${operacionEncontrada.tipo.toUpperCase()}</p>
+                        <p>🗺️ <strong>Trayecto:</strong> ${operacionEncontrada.origen} ➡️ ${operacionEncontrada.destino}</p>
+                        <p>🏢 <strong>Operador:</strong> ${operadorEncontrado ? operadorEncontrado.nombre : 'N/A'}</p>
+                        <p>🚪 <strong>Puerta/Vía:</strong> ${puntoEncontrado ? puntoEncontrado.codigo : 'N/A'}</p>
+                        <p>🕒 <strong>Hora Programada:</strong> ${fechaHoraProgramada}</p>
+                        <p>⏳ <strong>Hora Estimada:</strong> ${fechaHoraEstimada}</p>
+                        <p>🚦 <strong>Estado:</strong> <span class="estado-tag state-${operacionEncontrada.estado.toLowerCase()}">${operacionEncontrada.estado}</span></p>
                         <hr style="margin: 15px 0; border: 0; border-top: 1px solid var(--border-color);">
-                        <p style="font-size:0.8rem; color:gray;">🔑 <strong>ULID Interno:</strong> ${op.operacionId}</p>
+                        <p style="font-size:0.8rem; color:gray;">🔑 <strong>ULID Interno:</strong> ${operacionEncontrada.operacionId}</p>
                     `;
                     document.getElementById("modal-detalle")?.classList.remove("hidden");
                 }
@@ -291,16 +330,17 @@ document.addEventListener("DOMContentLoaded", () => {
        ========================================= */
     document.getElementById("close-modal-op")?.addEventListener("click", () => document.getElementById("modal-operacion").classList.add("hidden"));
     
-    document.getElementById("form-operacion")?.addEventListener("submit", (e) => {
-        e.preventDefault();
-        const id = document.getElementById("op-id").value;
-        let ops = JSON.parse(localStorage.getItem("operaciones")) || [];
-        const idx = ops.findIndex(o => o.operacionId === id);
-        if (idx !== -1) {
-            ops[idx].estado = document.getElementById("op-estado").value;
-            ops[idx].operadorId = parseInt(document.getElementById("op-operador").value);
-            ops[idx].puntoId = parseInt(document.getElementById("op-punto").value);
-            localStorage.setItem("operaciones", JSON.stringify(ops));
+    document.getElementById("form-operacion")?.addEventListener("submit", (evento) => {
+        evento.preventDefault();
+        const idOperacionModificada = document.getElementById("op-id").value;
+        let operacionesExistentes = JSON.parse(localStorage.getItem("operaciones")) || [];
+        const indiceOperacion = operacionesExistentes.findIndex(operacion => operacion.operacionId === idOperacionModificada);
+        
+        if (indiceOperacion !== -1) {
+            operacionesExistentes[indiceOperacion].estado = document.getElementById("op-estado").value;
+            operacionesExistentes[indiceOperacion].operadorId = parseInt(document.getElementById("op-operador").value);
+            operacionesExistentes[indiceOperacion].puntoId = parseInt(document.getElementById("op-punto").value);
+            localStorage.setItem("operaciones", JSON.stringify(operacionesExistentes));
             document.getElementById("modal-operacion")?.classList.add("hidden");
             aplicarFiltros(); 
         }
@@ -308,31 +348,32 @@ document.addEventListener("DOMContentLoaded", () => {
 
     document.getElementById("close-modal-crear")?.addEventListener("click", () => document.getElementById("modal-crear").classList.add("hidden"));
 
-    document.getElementById("form-crear")?.addEventListener("submit", (e) => {
-        e.preventDefault();
-        const codigo = document.getElementById("crear-codigo").value;
-        const hora = new Date(document.getElementById("crear-hora").value).getTime(); 
-        if (isNaN(hora)) return;
+    document.getElementById("form-crear")?.addEventListener("submit", (evento) => {
+        evento.preventDefault();
+        const codigoIntroducido = document.getElementById("crear-codigo").value;
+        const horaIntroducida = new Date(document.getElementById("crear-hora").value).getTime(); 
+        if (isNaN(horaIntroducida)) return;
 
-        let ops = JSON.parse(localStorage.getItem("operaciones")) || [];
-        const ciudad = document.getElementById("crear-ciudad").value;
-        const sentido = document.getElementById("crear-sentido").value;
+        let operacionesExistentes = JSON.parse(localStorage.getItem("operaciones")) || [];
+        const ciudadIntroducida = document.getElementById("crear-ciudad").value;
+        const sentidoSeleccionado = document.getElementById("crear-sentido").value;
 
-        ops.push({
+        operacionesExistentes.push({
             operacionId: generarULID(), 
             tipo: document.getElementById("crear-tipo").value,
-            codigo: codigo,
-            sentido: sentido,
-            origen: sentido === "llegada" ? ciudad : "Madrid", 
-            destino: sentido === "salida" ? ciudad : "Madrid",
-            horaProgramada: hora,
-            horaEstimada: hora,
+            codigo: codigoIntroducido,
+            sentido: sentidoSeleccionado,
+            origen: sentidoSeleccionado === "llegada" ? ciudadIntroducida : "Madrid", 
+            destino: sentidoSeleccionado === "salida" ? ciudadIntroducida : "Madrid",
+            horaProgramada: horaIntroducida,
+            horaEstimada: horaIntroducida,
             estado: "PROGRAMADO", 
             operadorId: parseInt(document.getElementById("crear-operador").value),
             puntoId: parseInt(document.getElementById("crear-punto").value)
         });
-        localStorage.setItem("operaciones", JSON.stringify(ops));
-        e.target.reset();
+        
+        localStorage.setItem("operaciones", JSON.stringify(operacionesExistentes));
+        evento.target.reset();
         document.getElementById("modal-crear")?.classList.add("hidden");
         aplicarFiltros();
     });
@@ -344,138 +385,158 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("close-modal-operadores")?.addEventListener("click", () => document.getElementById("modal-operadores").classList.add("hidden"));
     document.getElementById("close-modal-puntos")?.addEventListener("click", () => document.getElementById("modal-puntos").classList.add("hidden"));
 
-    const renderUsr = () => {
-        const u = JSON.parse(localStorage.getItem("usuarios")) || [];
-        const container = document.getElementById("lista-usuarios");
-        if(container) {
-            container.innerHTML = u.map(usr => `
-                <div style="display:grid; grid-template-columns:2fr 1fr 1.5fr; padding:10px; border-bottom:1px solid var(--border-color); align-items: center;">
-                    <span style="font-weight:bold;">${usr.email}</span>
-                    <span style="color:${usr.rol === 'GESTOR' ? '#2ecc71' : '#95a5a6'}; font-size:0.8rem; font-weight:bold;">${usr.rol}</span>
-                    <button class="btn-cambiar-rol" data-email="${usr.email}" data-rol="${usr.rol === 'GESTOR' ? 'PÚBLICO' : 'GESTOR'}" style="background:#3498db; color:white; border:none; border-radius:4px; padding: 6px; cursor:pointer;">Cambiar Rol</button>
-                </div>`).join("");
+    const renderizarUsuarios = () => {
+        const usuariosGuardados = JSON.parse(localStorage.getItem("usuarios")) || [];
+        const contenedorUsuarios = document.getElementById("lista-usuarios");
+        if(contenedorUsuarios) {
+            contenedorUsuarios.innerHTML = usuariosGuardados.map(usuario => `
+                <article style="display:grid; grid-template-columns:2fr 1fr 1.5fr; padding:10px; border-bottom:1px solid var(--border-color); align-items: center;">
+                    <span style="font-weight:bold;">${usuario.email}</span>
+                    <span style="color:${usuario.rol === ROL_GESTOR ? '#2ecc71' : '#95a5a6'}; font-size:0.8rem; font-weight:bold;">${usuario.rol}</span>
+                    <button class="btn-cambiar-rol" data-email="${usuario.email}" data-rol="${usuario.rol === ROL_GESTOR ? ROL_PUBLICO : ROL_GESTOR}" style="background:#3498db; color:white; border:none; border-radius:4px; padding: 6px; cursor:pointer;">Cambiar Rol</button>
+                </article>`).join("");
         }
     };
 
-    const renderOpr = () => {
-        const o = JSON.parse(localStorage.getItem("operadores")) || [];
-        const container = document.getElementById("lista-operadores");
-        if(container) {
-            container.innerHTML = o.map(opr => `
-                <div style="display:grid; grid-template-columns:2fr 1fr 1fr; padding:10px; border-bottom:1px solid var(--border-color); align-items: center;">
-                    <span style="font-weight:bold;">${opr.nombre}</span>
-                    <span>${opr.siglas}</span>
-                    <button class="btn-borrar-operador" data-id="${opr.operadorId}" style="background:#e74c3c; color:white; border:none; border-radius:4px; padding: 6px; cursor:pointer;">Borrar 🗑️</button>
-                </div>`).join("");
+    const renderizarOperadores = () => {
+        const operadoresGuardados = JSON.parse(localStorage.getItem("operadores")) || [];
+        const contenedorOperadores = document.getElementById("lista-operadores");
+        if(contenedorOperadores) {
+            contenedorOperadores.innerHTML = operadoresGuardados.map(operador => `
+                <article style="display:grid; grid-template-columns:2fr 1fr 1fr; padding:10px; border-bottom:1px solid var(--border-color); align-items: center;">
+                    <span style="font-weight:bold;">${operador.nombre}</span>
+                    <span>${operador.siglas}</span>
+                    <button class="btn-borrar-operador" data-id="${operador.operadorId}" style="background:#e74c3c; color:white; border:none; border-radius:4px; padding: 6px; cursor:pointer;">Borrar 🗑️</button>
+                </article>`).join("");
         }
     };
 
-    const renderPto = () => {
-        const p = JSON.parse(localStorage.getItem("puntos")) || [];
-        const container = document.getElementById("lista-puntos");
-        if(container) {
-            container.innerHTML = p.map(pto => `
-                <div style="display:grid; grid-template-columns:1fr 2fr 1fr; padding:10px; border-bottom:1px solid var(--border-color); align-items: center;">
-                    <span style="font-weight:bold;">${pto.tipo}</span>
-                    <span>${pto.codigo}</span>
-                    <button class="btn-borrar-punto" data-id="${pto.puntoId}" style="background:#e74c3c; color:white; border:none; border-radius:4px; padding: 6px; cursor:pointer;">Borrar 🗑️</button>
-                </div>`).join("");
+    const renderizarPuntos = () => {
+        const puntosGuardados = JSON.parse(localStorage.getItem("puntos")) || [];
+        const contenedorPuntos = document.getElementById("lista-puntos");
+        if(contenedorPuntos) {
+            contenedorPuntos.innerHTML = puntosGuardados.map(punto => `
+                <article style="display:grid; grid-template-columns:1fr 2fr 1fr; padding:10px; border-bottom:1px solid var(--border-color); align-items: center;">
+                    <span style="font-weight:bold;">${punto.tipo}</span>
+                    <span>${punto.codigo}</span>
+                    <button class="btn-borrar-punto" data-id="${punto.puntoId}" style="background:#e74c3c; color:white; border:none; border-radius:4px; padding: 6px; cursor:pointer;">Borrar 🗑️</button>
+                </article>`).join("");
         }
     };
 
-    // ESCUCHADOR GLOBAL DE BOTONES (100% Blindado con closest)
-    document.body.addEventListener("click", (e) => {
+    // ESCUCHADOR GLOBAL DE BOTONES DE ADMINISTRACIÓN
+    document.body.addEventListener("click", (eventoClic) => {
         
-        // --- 1. ABRIR MODALES ---
-        if (e.target.closest("#btn-nueva-operacion")) {
-            const opers = JSON.parse(localStorage.getItem("operadores")) || [];
-            const pts = JSON.parse(localStorage.getItem("puntos")) || [];
-            const selectOpers = document.getElementById("crear-operador");
-            const selectPts = document.getElementById("crear-punto");
+        // --- 1. APERTURA DE MODALES ---
+        if (eventoClic.target.closest("#btn-nueva-operacion")) {
+            const operadoresExistentes = JSON.parse(localStorage.getItem("operadores")) || [];
+            const puntosExistentes = JSON.parse(localStorage.getItem("puntos")) || [];
+            const selectorOperadores = document.getElementById("crear-operador");
+            const selectorPuntos = document.getElementById("crear-punto");
             
-            if(selectOpers) selectOpers.innerHTML = opers.map(o => `<option value="${o.operadorId}">${o.nombre}</option>`).join("");
-            if(selectPts) selectPts.innerHTML = pts.map(p => `<option value="${p.puntoId}">${p.codigo}</option>`).join("");
+            if(selectorOperadores) selectorOperadores.innerHTML = operadoresExistentes.map(operador => `<option value="${operador.operadorId}">${operador.nombre}</option>`).join("");
+            if(selectorPuntos) selectorPuntos.innerHTML = puntosExistentes.map(punto => `<option value="${punto.puntoId}">${punto.codigo}</option>`).join("");
             
             document.getElementById("modal-crear")?.classList.remove("hidden");
         }
         
-        if (e.target.closest("#btn-gestionar-usuarios")) { 
-            renderUsr(); 
+        if (eventoClic.target.closest("#btn-gestionar-usuarios")) { 
+            renderizarUsuarios(); 
             document.getElementById("modal-usuarios")?.classList.remove("hidden"); 
         }
         
-        if (e.target.closest("#btn-gestionar-operadores")) { 
-            renderOpr(); 
+        if (eventoClic.target.closest("#btn-gestionar-operadores")) { 
+            renderizarOperadores(); 
             document.getElementById("modal-operadores")?.classList.remove("hidden"); 
         }
         
-        if (e.target.closest("#btn-gestionar-puntos")) { 
-            renderPto(); 
+        if (eventoClic.target.closest("#btn-gestionar-puntos")) { 
+            renderizarPuntos(); 
             document.getElementById("modal-puntos")?.classList.remove("hidden"); 
         }
 
-        // --- 2. CAMBIAR ROL ---
-        const btnRol = e.target.closest(".btn-cambiar-rol");
-        if (btnRol) {
-            const email = btnRol.getAttribute("data-email");
-            const nuevo = btnRol.getAttribute("data-rol");
-            let u = JSON.parse(localStorage.getItem("usuarios")) || [];
+        // --- 2. CAMBIAR ROL DE USUARIO ---
+        const botonCambiarRol = eventoClic.target.closest(".btn-cambiar-rol");
+        if (botonCambiarRol) {
+            const emailUsuarioModificado = botonCambiarRol.getAttribute("data-email");
+            const nuevoRolAsignado = botonCambiarRol.getAttribute("data-rol");
+            let usuariosGuardados = JSON.parse(localStorage.getItem("usuarios")) || [];
 
-            if (nuevo === "PÚBLICO" && u.filter(x => x.rol === "GESTOR").length <= 1) {
-                return alert("⚠️ No puedes degradar al último Gestor.");
+            // Prevención para no quedarse sin gestores
+            if (nuevoRolAsignado === ROL_PUBLICO && usuariosGuardados.filter(usuario => usuario.rol === ROL_GESTOR).length <= 1) {
+                return alert("⚠️ ALERTA DE SISTEMA: No puedes degradar al último Gestor disponible.");
             }
 
-            const idx = u.findIndex(x => x.email === email);
-            u[idx].rol = nuevo;
-            localStorage.setItem("usuarios", JSON.stringify(u));
+            const indiceUsuario = usuariosGuardados.findIndex(usuario => usuario.email === emailUsuarioModificado);
+            usuariosGuardados[indiceUsuario].rol = nuevoRolAsignado;
+            localStorage.setItem("usuarios", JSON.stringify(usuariosGuardados));
 
-            if (usuarioActivo && email === usuarioActivo.email) {
-                usuarioActivo.rol = nuevo;
+            // Sincronización de sesión si te auto-modificas
+            if (usuarioActivo && emailUsuarioModificado === usuarioActivo.email) {
+                usuarioActivo.rol = nuevoRolAsignado;
                 sessionStorage.setItem("usuarioActivo", JSON.stringify(usuarioActivo));
-                alert(`Tu rol ha cambiado a ${nuevo}. Actualizando interfaz...`);
+                alert(`Su rol en el sistema ha cambiado a: ${nuevoRolAsignado}. Actualizando la interfaz...`);
                 location.reload(); 
                 return;
             }
-            renderUsr(); 
+            renderizarUsuarios(); 
             aplicarFiltros(); 
         }
 
         // --- 3. BORRAR OPERADORES Y PUNTOS ---
-        const btnBorrOpr = e.target.closest(".btn-borrar-operador");
-        if (btnBorrOpr) {
-            const id = parseInt(btnBorrOpr.getAttribute("data-id"));
-            let o = JSON.parse(localStorage.getItem("operadores")) || [];
-            localStorage.setItem("operadores", JSON.stringify(o.filter(x => x.operadorId !== id)));
-            renderOpr(); aplicarFiltros();
+        const botonBorrarOperador = eventoClic.target.closest(".btn-borrar-operador");
+        if (botonBorrarOperador) {
+            const idOperadorEliminar = parseInt(botonBorrarOperador.getAttribute("data-id"));
+            let operadoresGuardados = JSON.parse(localStorage.getItem("operadores")) || [];
+            localStorage.setItem("operadores", JSON.stringify(operadoresGuardados.filter(operador => operador.operadorId !== idOperadorEliminar)));
+            renderizarOperadores(); 
+            aplicarFiltros();
         }
         
-        const btnBorrPto = e.target.closest(".btn-borrar-punto");
-        if (btnBorrPto) {
-            const id = parseInt(btnBorrPto.getAttribute("data-id"));
-            let p = JSON.parse(localStorage.getItem("puntos")) || [];
-            localStorage.setItem("puntos", JSON.stringify(p.filter(x => x.puntoId !== id)));
-            renderPto(); aplicarFiltros();
+        const botonBorrarPunto = eventoClic.target.closest(".btn-borrar-punto");
+        if (botonBorrarPunto) {
+            const idPuntoEliminar = parseInt(botonBorrarPunto.getAttribute("data-id"));
+            let puntosGuardados = JSON.parse(localStorage.getItem("puntos")) || [];
+            localStorage.setItem("puntos", JSON.stringify(puntosGuardados.filter(punto => punto.puntoId !== idPuntoEliminar)));
+            renderizarPuntos(); 
+            aplicarFiltros();
         }
     });
 
-    // Añadir Operadores y Puntos
-    document.getElementById("form-add-operador")?.addEventListener("submit", (e) => {
-        e.preventDefault();
-        let o = JSON.parse(localStorage.getItem("operadores")) || [];
-        o.push({ operadorId: Date.now(), nombre: document.getElementById("nuevo-op-nombre").value, siglas: document.getElementById("nuevo-op-siglas").value.toUpperCase(), urlIcono: "https://cdn-icons-png.flaticon.com/512/782/782073.png" });
-        localStorage.setItem("operadores", JSON.stringify(o));
-        e.target.reset(); renderOpr(); aplicarFiltros();
+    // Añadir Nuevos Operadores y Puntos
+    document.getElementById("form-add-operador")?.addEventListener("submit", (evento) => {
+        evento.preventDefault();
+        let operadoresGuardados = JSON.parse(localStorage.getItem("operadores")) || [];
+        operadoresGuardados.push({ 
+            operadorId: Date.now(), 
+            nombre: document.getElementById("nuevo-op-nombre").value, 
+            siglas: document.getElementById("nuevo-op-siglas").value.toUpperCase(), 
+            urlIcono: ICONO_POR_DEFECTO 
+        });
+        localStorage.setItem("operadores", JSON.stringify(operadoresGuardados));
+        evento.target.reset(); 
+        renderizarOperadores(); 
+        aplicarFiltros();
     });
 
-    document.getElementById("form-add-punto")?.addEventListener("submit", (e) => {
-        e.preventDefault();
-        let p = JSON.parse(localStorage.getItem("puntos")) || [];
-        p.push({ puntoId: Date.now(), tipo: document.getElementById("nuevo-pto-tipo").value, codigo: document.getElementById("nuevo-pto-codigo").value.toUpperCase() });
-        localStorage.setItem("puntos", JSON.stringify(p));
-        e.target.reset(); renderPto(); aplicarFiltros();
+    document.getElementById("form-add-punto")?.addEventListener("submit", (evento) => {
+        evento.preventDefault();
+        let puntosGuardados = JSON.parse(localStorage.getItem("puntos")) || [];
+        puntosGuardados.push({ 
+            puntoId: Date.now(), 
+            tipo: document.getElementById("nuevo-pto-tipo").value, 
+            codigo: document.getElementById("nuevo-pto-codigo").value.toUpperCase() 
+        });
+        localStorage.setItem("puntos", JSON.stringify(puntosGuardados));
+        evento.target.reset(); 
+        renderizarPuntos(); 
+        aplicarFiltros();
     });
 
-    // Carga inicial y timer
+    // Carga inicial y temporizador de refresco
     aplicarFiltros();
-    setInterval(() => { console.log("Refrescando tablero..."); aplicarFiltros(); }, 60000); 
+    setInterval(() => { 
+        console.log("Refrescando tablero de operaciones..."); 
+        aplicarFiltros(); 
+    }, TIEMPO_REFRESCO_MS); 
 });

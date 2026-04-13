@@ -10,17 +10,17 @@
     <header>
         <h1>✈️ Panel Informativo 🚂</h1>
         
-        <div class="auth-buttons">
+        <nav class="auth-buttons">
             <button id="btn-login" class="btn-primary">Entrar</button>
             <button id="btn-signup" class="btn-secondary">Registrarse</button>
             <button id="btn-logout" class="btn-danger hidden">Cerrar Sesión</button>
-        </div>
+        </nav>
     </header>
 
     <main>
         <section class="filtros">
             <input type="text" id="busqueda-codigo" placeholder="Buscar por código (ej: IB123)...">
-            <select id="filtro-estado">
+            <select id="filtro-estado" aria-label="Filtrar por estado">
                 <option value="TODOS">Todos los estados</option>
                 <option value="PROGRAMADO">Programado</option>
                 <option value="RETRASADO">Retrasado</option>
@@ -31,58 +31,58 @@
             </select>
         </section>
 
-        <div class="tableros-container">
+        <section class="tableros-container">
             
-            <section class="panel" id="panel-salidas">
+            <article class="panel" id="panel-salidas">
                 <h2>🛫 Salidas</h2>
-                <div class="tabla-header" id="header-salidas">
+                <header class="tabla-header" id="header-salidas">
                     <span>Hora</span>
                     <span>Código</span>
                     <span>Destino</span>
                     <span>Operador</span>
                     <span>Puerta/Vía</span>
                     <span>Estado</span>
-                </div>
-                <div id="lista-salidas" class="tabla-cuerpo"></div>
-            </section>
+                </header>
+                <section id="lista-salidas" class="tabla-cuerpo"></section>
+            </article>
 
-            <section class="panel" id="panel-llegadas">
+            <article class="panel" id="panel-llegadas">
                 <h2>🛬 Llegadas</h2>
-                <div class="tabla-header" id="header-salidas">
+                <header class="tabla-header" id="header-llegadas">
                     <span>Hora</span>
                     <span>Código</span>
                     <span>Origen</span>
                     <span>Operador</span>
                     <span>Puerta/Vía</span>
                     <span>Estado</span>
-                </div>
-                <div id="lista-llegadas" class="tabla-cuerpo"></div>
-            </section>
+                </header>
+                <section id="lista-llegadas" class="tabla-cuerpo"></section>
+            </article>
 
-        </div>
+        </section>
     </main>
 
-    <div id="modal-auth" class="modal-overlay hidden">
-        <div class="modal-content">
+    <aside id="modal-auth" class="modal-overlay hidden">
+        <article class="modal-content">
             <span id="close-modal" class="close">&times;</span>
             <h2 id="modal-title">Iniciar Sesión</h2>
             
             <form id="auth-form">
                 <div class="form-group">
-                    <label>Email</label>
+                    <label for="auth-email">Email</label>
                     <input type="email" id="auth-email" required placeholder="tu@email.com">
                 </div>
                 <div class="form-group">
-                    <label>Contraseña</label>
+                    <label for="auth-password">Contraseña</label>
                     <input type="password" id="auth-password" required placeholder="••••••••">
                 </div>
                 <button type="submit" id="auth-submit" class="btn-full">Confirmar</button>
             </form>
-        </div>
-    </div>
+        </article>
+    </aside>
 
-    <div id="modal-operacion" class="modal-overlay hidden">
-        <div class="modal-content">
+    <aside id="modal-operacion" class="modal-overlay hidden">
+        <article class="modal-content">
             <span id="close-modal-op" class="close">&times;</span>
             <h2 id="modal-op-title">✏️ Editar Operación</h2>
             
@@ -90,7 +90,7 @@
                 <input type="hidden" id="op-id">
                 
                 <div class="form-group">
-                    <label>Estado</label>
+                    <label for="op-estado">Estado</label>
                     <select id="op-estado" required>
                         <option value="PROGRAMADO">Programado</option>
                         <option value="RETRASADO">Retrasado</option>
@@ -102,30 +102,28 @@
                 </div>
 
                 <div class="form-group">
-                    <label>Operador</label>
-                    <select id="op-operador" required>
-                        </select>
+                    <label for="op-operador">Operador</label>
+                    <select id="op-operador" required></select>
                 </div>
 
                 <div class="form-group">
-                    <label>Puerta / Vía</label>
-                    <select id="op-punto" required>
-                        </select>
+                    <label for="op-punto">Puerta / Vía</label>
+                    <select id="op-punto" required></select>
                 </div>
 
                 <button type="submit" class="btn-full">Guardar Cambios</button>
             </form>
-        </div>
-    </div>
+        </article>
+    </aside>
 
-    <div id="modal-crear" class="modal-overlay hidden">
-        <div class="modal-content">
+    <aside id="modal-crear" class="modal-overlay hidden">
+        <article class="modal-content">
             <span id="close-modal-crear" class="close">&times;</span>
             <h2 id="modal-crear-title">➕ Nueva Operación</h2>
             
             <form id="form-crear">
                 <div class="form-group">
-                    <label>Tipo</label>
+                    <label for="crear-tipo">Tipo</label>
                     <select id="crear-tipo" required>
                         <option value="vuelo">Vuelo ✈️</option>
                         <option value="tren">Tren 🚂</option>
@@ -133,12 +131,12 @@
                 </div>
 
                 <div class="form-group">
-                    <label>Código (ej. IB999)</label>
+                    <label for="crear-codigo">Código (ej. IB999)</label>
                     <input type="text" id="crear-codigo" required placeholder="Código del transporte">
                 </div>
 
                 <div class="form-group">
-                    <label>Sentido</label>
+                    <label for="crear-sentido">Sentido</label>
                     <select id="crear-sentido" required>
                         <option value="salida">Salida 🛫</option>
                         <option value="llegada">Llegada 🛬</option>
@@ -146,60 +144,56 @@
                 </div>
 
                 <div class="form-group">
-                    <label id="label-ciudad">Destino</label>
+                    <label id="label-ciudad" for="crear-ciudad">Destino</label>
                     <input type="text" id="crear-ciudad" required placeholder="Ciudad">
                 </div>
 
                 <div class="form-group">
-                    <label>Hora Programada</label>
+                    <label for="crear-hora">Hora Programada</label>
                     <input type="datetime-local" id="crear-hora" required>
                 </div>
 
                 <div class="form-group">
-                    <label>Operador</label>
-                    <select id="crear-operador" required>
-                        </select>
+                    <label for="crear-operador">Operador</label>
+                    <select id="crear-operador" required></select>
                 </div>
 
                 <div class="form-group">
-                    <label>Puerta / Vía</label>
-                    <select id="crear-punto" required>
-                        </select>
+                    <label for="crear-punto">Puerta / Vía</label>
+                    <select id="crear-punto" required></select>
                 </div>
 
-                <button type="submit" class="btn-full" style="background-color: #2ecc71;">Crear Operación</button>
+                <button type="submit" class="btn-full" style="background-color: var(--success-color, #2ecc71);">Crear Operación</button>
             </form>
-        </div>
-    </div>
+        </article>
+    </aside>
 
-    <div id="modal-usuarios" class="modal-overlay hidden">
-        <div class="modal-content" style="max-width: 600px;">
+    <aside id="modal-usuarios" class="modal-overlay hidden">
+        <article class="modal-content" style="max-width: 600px;">
             <span id="close-modal-usuarios" class="close">&times;</span>
             <h2 style="text-align: left; margin-bottom: 20px;">👥 Gestión de Usuarios</h2>
             
-            <div class="tabla-header" style="grid-template-columns: 2fr 1fr 1.5fr;">
+            <header class="tabla-header" style="grid-template-columns: 2fr 1fr 1.5fr;">
                 <span>Email</span>
                 <span>Rol Actual</span>
                 <span>Acción</span>
-            </div>
+            </header>
             
-            <div id="lista-usuarios" class="tabla-cuerpo" style="max-height: 350px; overflow-y: auto;">
-                </div>
-        </div>
-    </div>
+            <section id="lista-usuarios" class="tabla-cuerpo" style="max-height: 350px; overflow-y: auto;"></section>
+        </article>
+    </aside>
 
-    <div id="modal-detalle" class="modal-overlay hidden">
-        <div class="modal-content">
+    <aside id="modal-detalle" class="modal-overlay hidden">
+        <article class="modal-content">
             <span id="close-modal-detalle" class="close">&times;</span>
             <h2 style="color: var(--accent-blue); margin-bottom: 15px;">✈️ Detalles de la Operación</h2>
             
-            <div id="detalle-contenido" style="line-height: 1.8; font-size: 1.05rem;">
-            </div>
-        </div>
-    </div>
+            <section id="detalle-contenido" style="line-height: 1.8; font-size: 1.05rem;"></section>
+        </article>
+    </aside>
 
-    <div id="modal-operadores" class="modal-overlay hidden">
-        <div class="modal-content" style="max-width: 500px;">
+    <aside id="modal-operadores" class="modal-overlay hidden">
+        <article class="modal-content" style="max-width: 500px;">
             <span id="close-modal-operadores" class="close">&times;</span>
             <h2 style="color: var(--accent-blue); margin-bottom: 15px;">🏢 Gestión de Operadores</h2>
             
@@ -209,15 +203,15 @@
                 <button type="submit" class="btn-primary" style="padding: 8px 15px;">Añadir</button>
             </form>
             
-            <div class="tabla-header" style="grid-template-columns: 2fr 1fr 1fr;">
+            <header class="tabla-header" style="grid-template-columns: 2fr 1fr 1fr;">
                 <span>Nombre</span> <span>Siglas</span> <span>Acción</span>
-            </div>
-            <div id="lista-operadores" class="tabla-cuerpo" style="max-height: 250px; overflow-y: auto;"></div>
-        </div>
-    </div>
+            </header>
+            <section id="lista-operadores" class="tabla-cuerpo" style="max-height: 250px; overflow-y: auto;"></section>
+        </article>
+    </aside>
 
-    <div id="modal-puntos" class="modal-overlay hidden">
-        <div class="modal-content" style="max-width: 500px;">
+    <aside id="modal-puntos" class="modal-overlay hidden">
+        <article class="modal-content" style="max-width: 500px;">
             <span id="close-modal-puntos" class="close">&times;</span>
             <h2 style="color: var(--accent-blue); margin-bottom: 15px;">🚪 Gestión de Puntos</h2>
             
@@ -230,12 +224,12 @@
                 <button type="submit" class="btn-primary" style="padding: 8px 15px;">Añadir</button>
             </form>
             
-            <div class="tabla-header" style="grid-template-columns: 1fr 2fr 1fr;">
+            <header class="tabla-header" style="grid-template-columns: 1fr 2fr 1fr;">
                 <span>Tipo</span> <span>Código</span> <span>Acción</span>
-            </div>
-            <div id="lista-puntos" class="tabla-cuerpo" style="max-height: 250px; overflow-y: auto;"></div>
-        </div>
-    </div>
+            </header>
+            <section id="lista-puntos" class="tabla-cuerpo" style="max-height: 250px; overflow-y: auto;"></section>
+        </article>
+    </aside>
 
     <script type="module" src="./js/main.js"></script>
 </body>
