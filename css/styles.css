@@ -396,3 +396,35 @@ select option {
     background-color: var(--panel-bg);
     color: var(--text-main);
 }
+
+/* =========================================
+   🖱️ EFECTOS HOVER (ORDENACIÓN Y DETALLE)
+   ========================================= */
+
+/* Efecto al pasar el ratón por las cabeceras (para ordenar) */
+.tabla-header span {
+    cursor: pointer;
+    transition: color 0.3s ease;
+    user-select: none; /* Evita que el texto se ponga azul al hacer doble clic */
+}
+
+.tabla-header span:hover {
+    color: var(--accent-blue);
+    font-weight: bold;
+}
+
+/* Efecto al pasar el ratón por un vuelo (para ver detalles) */
+.operacion-row {
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.operacion-row:hover {
+    background-color: var(--border-color); /* Resalte sutil */
+    transform: scale(1.01); /* Se hace un pelín más grande */
+}
+
+/* Evitamos que el clic en los botones abra la vista detalle */
+.acciones-gestor {
+    cursor: default;
+}

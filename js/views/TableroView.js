@@ -60,7 +60,7 @@ export class TableroView {
         }
 
         return `
-            <div class="operacion-row">
+            <div class="operacion-row" data-id="${op.operacionId}">
                 <span>${hora}</span>
                 <span style="font-weight: bold; color: #0f3460;">${op.codigo}</span>
                 <span>${ciudad}</span>
