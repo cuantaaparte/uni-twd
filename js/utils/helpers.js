@@ -11,6 +11,7 @@ export function generarULID() {
 }
 
 export const normalizarIdColumna = (textoColumna) => {
+    if (!textoColumna) return "";
     return textoColumna.replace(/[⬆️⬇️]/g, "")
                        .trim()
                        .toUpperCase()

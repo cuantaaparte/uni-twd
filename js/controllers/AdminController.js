@@ -97,7 +97,10 @@ export class AdminController {
                 return;
             }
             this.renderizarUsuarios(); 
-            this.onDataChanged();
+            // Comprobamos que el callback existe antes de llamarlo para evitar crasheos
+            if (typeof this.onDataChanged === 'function') {
+                this.onDataChanged();
+            }
         }
 
         // Borrar Operador / Punto

@@ -4,13 +4,20 @@ import { normalizarIdColumna } from "../utils/helpers.js";
 const ROL_GESTOR = "GESTOR";
 
 export class TableroController {
-    constructor() {
-        this.tableroView = new TableroView();
+    // Añadimos parámetros por defecto al constructor para Inyección de Dependencias
+    constructor(
+        tableroViewInstance = null, 
+        inputBusquedaOverride = null, 
+        selectEstadoOverride = null
+    ) {
+        // Si no le pasamos vista (producción), crea la real. Si le pasamos una (testing), usa la simulada.
+        this.tableroView = tableroViewInstance || new TableroView();
         this.columnaActivaID = "FECHA-HORA"; 
         this.ordenAscendente = true;
         
-        this.inputBusqueda = document.getElementById("busqueda-codigo");
-        this.selectEstado = document.getElementById("filtro-estado");
+        // Prioriza los elementos pasados por parámetro (para el test), si no, usa el DOM real
+        this.inputBusqueda = inputBusquedaOverride || document.getElementById("busqueda-codigo");
+        this.selectEstado = selectEstadoOverride || document.getElementById("filtro-estado");
 
         this.initListeners();
     }
@@ -24,7 +31,11 @@ export class TableroController {
             tablerosContenedorGlobal.addEventListener("click", (eventoClic) => this.handleTableClicks(eventoClic));
         }
 
-        document.getElementById("close-modal-detalle")?.addEventListener("click", () => document.getElementById("modal-detalle").classList.add("hidden"));
+        // Usamos optional chaining robusto para no romper el test si el modal no existe
+        const btnClose = document.getElementById("close-modal-detalle");
+        if (btnClose) {
+            btnClose.addEventListener("click", () => document.getElementById("modal-detalle")?.classList.add("hidden"));
+        }
     }
 
     aplicarFiltros() {
@@ -87,11 +98,15 @@ export class TableroController {
     }
 
     handleTableClicks(eventoClic) {
-        // Ordenación por cabeceras
-        const cabeceraClicada = eventoClic.target.closest(".tabla-header span") || (eventoClic.target.parentElement?.classList.contains("tabla-header") ? eventoClic.target : null);
+        // 1. Buscamos la cabecera (usamos textContent como salvavidas para el test)
+        const cabeceraClicada = eventoClic.target.closest(".tabla-header span") || 
+                               (eventoClic.target.parentElement?.classList.contains("tabla-header") ? eventoClic.target : null);
+        
         if (cabeceraClicada) {
-            const idColumnaClicada = normalizarIdColumna(cabeceraClicada.innerText);
-            if (idColumnaClicada === "ACCIONES") return; 
+            const textoRaw = cabeceraClicada.innerText || cabeceraClicada.textContent || "";
+            const idColumnaClicada = normalizarIdColumna(textoRaw);
+            
+            if (idColumnaClicada === "ACCIONES" || !idColumnaClicada) return; 
 
             if (normalizarIdColumna(this.columnaActivaID) === idColumnaClicada) {
                 this.ordenAscendente = !this.ordenAscendente; 
@@ -100,20 +115,24 @@ export class TableroController {
                 this.ordenAscendente = true;
             }
 
+            // Actualizamos visualmente las flechitas
             document.querySelectorAll(".tabla-header span").forEach(cabeceraSpan => {
-                const idCabeceraIterada = normalizarIdColumna(cabeceraSpan.innerText);
-                const textoBaseLimpio = cabeceraSpan.innerText.replace(/[⬆️⬇️]/g, "").trim();
-                if (idCabeceraIterada === idColumnaClicada) {
-                    cabeceraSpan.innerText = textoBaseLimpio + (this.ordenAscendente ? " ⬆️" : " ⬇️");
+                const txt = cabeceraSpan.innerText || cabeceraSpan.textContent || "";
+                const idIterada = normalizarIdColumna(txt);
+                const textoLimpio = txt.replace(/[⬆️⬇️]/g, "").trim();
+                
+                if (idIterada === idColumnaClicada) {
+                    cabeceraSpan.innerText = textoLimpio + (this.ordenAscendente ? " ⬆️" : " ⬇️");
                 } else {
-                    cabeceraSpan.innerText = textoBaseLimpio;
+                    cabeceraSpan.innerText = textoLimpio;
                 }
             });
+
             this.aplicarFiltros();
             return;
         }
 
-        // Mostrar Detalle (Ignora clics en los botones de gestor)
+        // Mostrar Detalle
         const filaTablaClicada = eventoClic.target.closest(".operacion-row");
         if (filaTablaClicada && !eventoClic.target.closest(".acciones-gestor")) { 
             const idOperacion = filaTablaClicada.getAttribute("data-id");

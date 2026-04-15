@@ -1,5 +1,5 @@
 // Importamos la librería para generar el ID único de 26 caracteres
-import { ulid } from "https://esm.sh/ulid";
+import { generarULID } from "../utils/helpers.js";
 
 // 🧊 Congelamos las opciones para evitar errores de escritura (Fake Enums)
 export const TIPOS_OPERACION = Object.freeze({
@@ -33,7 +33,7 @@ export class Operacion {
         }
 
         // Generamos el identificador único de la operación (ULID)
-        this.operacionId = ulid(); 
+        this.operacionId = generarULID();
 
         
         this.tipo = tipo;

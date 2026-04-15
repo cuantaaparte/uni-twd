@@ -1,0 +1,36 @@
+{
+  "name": "code",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cuantaaparte/uni-twd.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/cuantaaparte/uni-twd/issues"
+  },
+  "homepage": "https://github.com/cuantaaparte/uni-twd#readme",
+  "devDependencies": {
+    "jest": "^30.3.0",
+    "jest-environment-jsdom": "^30.3.0"
+  },
+  "homepage": "https://github.com/cuantaaparte/uni-twd#readme",
+  "devDependencies": {
+    "jest": "^30.3.0",
+    "jest-environment-jsdom": "^29.7.0" 
+  },
+  "jest": {
+    "testEnvironment": "jsdom"
+  }
+}

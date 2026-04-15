@@ -2,8 +2,8 @@ import { AuthView } from "../views/AuthView.js";
 import { Usuario, ROLES_USUARIO } from "../models/Usuario.js";
 
 export class AuthController {
-    constructor(onAuthChangedCallback) {
-        this.authView = new AuthView();
+    constructor(onAuthChangedCallback, authViewInstance = null) {
+        this.authView = authViewInstance || new AuthView();
         this.onAuthChanged = onAuthChangedCallback; // Avisamos al main cuando alguien entra/sale
         this.initListeners();
         
