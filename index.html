@@ -26,18 +26,23 @@
     </header>
 
     <main>
-        <section class="filtros">
-            <input type="text" id="busqueda-codigo" placeholder="Buscar por código (ej: IB123)...">
-            <select id="filtro-estado" aria-label="Filtrar por estado">
-                <option value="TODOS">Todos los estados</option>
-                <option value="PROGRAMADO">Programado</option>
-                <option value="RETRASADO">Retrasado</option>
-                <option value="CANCELADO">Cancelado</option>
-                <option value="EMBARCANDO">Embarcando</option>
-                <option value="EN_RUTA">En ruta</option>
-                <option value="LLEGADO">Llegado</option>
-            </select>
-        </section>
+        <section class="filtros" id="contenedor-filtros">
+        <input type="text" id="busqueda-codigo" placeholder="Buscar por código (ej: IB123)...">
+        <select id="filtro-estado" aria-label="Filtrar por estado">
+            <option value="TODOS">Todos los estados</option>
+            <option value="PROGRAMADO">Programado</option>
+            <option value="RETRASADO">Retrasado</option>
+            <option value="CANCELADO">Cancelado</option>
+            <option value="EMBARCANDO">Embarcando</option>
+            <option value="EN_RUTA">En ruta</option>
+            <option value="LLEGADO">Llegado</option>
+        </select>
+
+    <button id="btn-nueva-operacion" class="btn-primary hidden">➕ Nueva Operación</button>
+    <button id="btn-gestionar-usuarios" class="btn-secondary hidden">👥 Usuarios</button>
+    <button id="btn-gestionar-operadores" class="btn-secondary hidden">🏢 Operadores</button>
+    <button id="btn-gestionar-puntos" class="btn-secondary hidden">🚪 Puntos</button>
+</section>
 
         <section class="tableros-container">
             

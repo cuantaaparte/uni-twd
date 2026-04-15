@@ -17,9 +17,12 @@ header {
     align-items: center;
 }
 
+/* COMPORTAMIENTO AUTOMÁTICO (Haya 2 o 6 elementos) */
 .filtros {
     display: flex;
-    justify-content: center;
+    flex-wrap: wrap; /* Si no caben, bajan de línea automáticamente */
+    justify-content: center; /* CENTRADO PERFECTO SIEMPRE */
+    align-items: stretch;
     gap: 15px;
     padding: 20px;
     background-color: var(--filter-bg);
@@ -27,6 +30,33 @@ header {
     border-bottom: 1px solid var(--border-color);
 }
 
+/* 2. COMPORTAMIENTO ESCRITORIO (Todos en línea) */
+.filtros > * {
+    flex: 1 1 150px; 
+    min-width: 150px; 
+    max-width: 250px; 
+}
+
+/* =========================================
+    MEDIA QUERIES (CONTROL ESTRICTO DE FILAS)
+   ========================================= */
+
+/* 3. TABLET / PANTALLA MEDIANA: Forzamos 3 por fila (3x2) */
+@media (max-width: 1150px) {
+    .filtros > * {
+        /* (100% de ancho - 30px de los dos huecos de 15px) dividido entre 3 */
+        flex: 0 0 calc((100% - 30px) / 3); 
+        max-width: none; /* Quitamos el tope para que cuadren perfecto */
+    }
+}
+
+/* 4. MÓVIL ENANO: Forzamos 2 por fila (2x3) */
+@media (max-width: 600px) {
+    .filtros > * {
+        /* (100% de ancho - 15px del hueco central) dividido entre 2 */
+        flex: 0 0 calc((100% - 15px) / 2); 
+    }
+}
 .tableros-container {
     display: flex;
     flex-direction: column; 
@@ -60,3 +90,4 @@ header {
         flex: 1; 
     }
 }
+

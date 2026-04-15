@@ -100,7 +100,7 @@ export class TableroController {
     handleTableClicks(eventoClic) {
         // 1. Buscamos la cabecera (usamos textContent como salvavidas para el test)
         const cabeceraClicada = eventoClic.target.closest(".tabla-header span") || 
-                               (eventoClic.target.parentElement?.classList.contains("tabla-header") ? eventoClic.target : null);
+                                (eventoClic.target.parentElement?.classList.contains("tabla-header") ? eventoClic.target : null);
         
         if (cabeceraClicada) {
             const textoRaw = cabeceraClicada.innerText || cabeceraClicada.textContent || "";
@@ -171,40 +171,49 @@ export class TableroController {
     }
 
     renderizarInterfazAdministracion(usuarioActual) {
-        const contenedorFiltros = document.querySelector(".filtros");
         const contenedorAuth = document.querySelector(".auth-buttons");
         let infoUsuarioLogueado = document.getElementById("info-usuario-activo");
 
         if (usuarioActual) {
             if (!infoUsuarioLogueado) {
-                infoUsuarioLogueado = document.createElement("span");
+                // Creamos el contenedor del Badge
+                infoUsuarioLogueado = document.createElement("div");
                 infoUsuarioLogueado.id = "info-usuario-activo";
-                infoUsuarioLogueado.style.color = "white";
+                
+                // 🎨 ESTILOS DEL USER BADGE (Efecto Píldora Profesional)
+                infoUsuarioLogueado.style.display = "flex";
+                infoUsuarioLogueado.style.alignItems = "center";
+                infoUsuarioLogueado.style.gap = "10px";
+                infoUsuarioLogueado.style.padding = "6px 16px";
+                infoUsuarioLogueado.style.borderRadius = "20px";
+                infoUsuarioLogueado.style.backgroundColor = "var(--panel-bg)";
+                infoUsuarioLogueado.style.border = "1px solid var(--border-color)";
+                infoUsuarioLogueado.style.boxShadow = "0 2px 5px var(--shadow-color)";
                 infoUsuarioLogueado.style.marginRight = "15px";
-                infoUsuarioLogueado.style.alignSelf = "center";
+                
                 contenedorAuth.prepend(infoUsuarioLogueado);
             }
-            const colorDistintivoRol = usuarioActual.rol === ROL_GESTOR ? "#2ecc71" : "#3498db";
-            infoUsuarioLogueado.innerHTML = `👤 ${usuarioActual.email} <strong style="color: ${colorDistintivoRol}; margin-left: 5px;">[${usuarioActual.rol}]</strong>`;
+
+            // Colores e iconos dinámicos según el Rol
+            const esGestor = usuarioActual.rol === "GESTOR";
+            const colorRol = esGestor ? "var(--status-green)" : "var(--accent-blue)";
+            const iconoRol = esGestor ? "👨‍✈️" : "👤";
+
+            // Inyectamos el contenido del Badge
+            infoUsuarioLogueado.innerHTML = `
+                <span style="font-size: 1.1rem;">${iconoRol}</span>
+                <span style="font-weight: 600; color: var(--text-main); font-size: 0.9rem;">
+                    ${usuarioActual.email.split('@')[0]} </span>
+                <span style="background-color: ${colorRol}; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.7rem; font-weight: bold; letter-spacing: 0.5px;">
+                    ${usuarioActual.rol}
+                </span>
+            `;
         } else if (infoUsuarioLogueado) {
             infoUsuarioLogueado.remove();
         }
 
-        const alternarBotonAdmin = (id, mostrar, texto, clase, color) => {
-            let btn = document.getElementById(id);
-            if (mostrar && !btn) {
-                btn = document.createElement("button");
-                btn.id = id; btn.className = clase; btn.style.marginLeft = "10px";
-                if(color) btn.style.backgroundColor = color;
-                btn.innerText = texto;
-                if(contenedorFiltros) contenedorFiltros.appendChild(btn);
-            } else if (!mostrar && btn) btn.remove();
-        };
-
-        const esGestor = usuarioActual && usuarioActual.rol === ROL_GESTOR;
-        alternarBotonAdmin("btn-nueva-operacion", esGestor, "➕ Nueva Operación", "btn-primary", "#2ecc71");
-        alternarBotonAdmin("btn-gestionar-usuarios", esGestor, "👥 Usuarios", "btn-secondary");
-        alternarBotonAdmin("btn-gestionar-operadores", esGestor, "🏢 Operadores", "btn-secondary");
-        alternarBotonAdmin("btn-gestionar-puntos", esGestor, "🚪 Puntos", "btn-secondary");
+        // ❌ Aquí antes estaba la función 'alternarBotonAdmin' que creaba clones.
+        // La hemos eliminado porque ahora la Vista (AuthView) se encarga de mostrar/ocultar 
+        // los botones estáticos del HTML. ¡Código mucho más limpio!
     }
 }
