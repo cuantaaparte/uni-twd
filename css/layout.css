@@ -91,3 +91,33 @@ header {
     }
 }
 
+/* =========================================
+    SCROLL INTERNO PARA LAS TABLAS
+   ========================================= */
+.tabla-cuerpo {
+    /* Ajusta este valor si tus filas son más altas o bajas. 
+       Unos 260px-280px suelen ser 4 viajes exactos. */
+    max-height: 280px; 
+    overflow-y: auto; /* Activa el scroll vertical solo si es necesario */
+    overflow-x: hidden; /* Evita scrolls horizontales raros */
+}
+
+/* ✨ EXTRA PRO: Estilizar la barra de scroll para que no se vea fea y genérica */
+.tabla-cuerpo::-webkit-scrollbar {
+    width: 8px; /* Barra finita y elegante */
+}
+
+.tabla-cuerpo::-webkit-scrollbar-track {
+    background: var(--filter-bg); /* Fondo de la pista del scroll */
+    border-radius: 4px;
+}
+
+.tabla-cuerpo::-webkit-scrollbar-thumb {
+    background: var(--accent-blue); /* Color del "pulgar" que deslizas */
+    border-radius: 4px;
+}
+
+.tabla-cuerpo::-webkit-scrollbar-thumb:hover {
+    background: var(--btn-text, #ffffff); /* Brilla un poco al pasar el ratón */
+}
+
