@@ -30,7 +30,7 @@ export class TableroView {
     }
 
     generarFilaHTML(operacion, operador, punto, esGestor) {
-        // ---  LÓGICA DE FECHAS (Hoy, Mañana, Otros) --- 
+        // ---  LÓGICA DE FECHAS (Hoy, Mañana, Ayer, Otros) --- 
         const fechaOperacion = new Date(operacion.horaProgramada);
         
         //  Comprobar si la fecha es pasada (para poner en rojo)
@@ -39,13 +39,17 @@ export class TableroView {
         // En vez de clase de CSS, inyectamos el estilo directo rojo brillante si es pasada
         const estiloColorFecha = esPasada ? "color: #ff4d4d; font-weight: bold;" : ""; 
         
-        // Obtenemos el inicio del día actual
+        // 1️⃣ Obtenemos el inicio del día actual
         const fechaHoy = new Date();
         fechaHoy.setHours(0, 0, 0, 0);
         
-        // Obtenemos el inicio del día de mañana
+        // 2️⃣ Obtenemos el inicio del día de mañana (+1 día)
         const fechaManana = new Date(fechaHoy);
         fechaManana.setDate(fechaManana.getDate() + 1);
+
+        // 3️⃣ Obtenemos el inicio del día de ayer (-1 día) 🆕
+        const fechaAyer = new Date(fechaHoy);
+        fechaAyer.setDate(fechaAyer.getDate() - 1);
         
         // Obtenemos el inicio del día de la operación
         const diaOperacion = new Date(fechaOperacion);
@@ -55,10 +59,13 @@ export class TableroView {
         const formatoSoloHora = fechaOperacion.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
         const formatoSoloFecha = fechaOperacion.toLocaleDateString();
 
+        // 🔄 Comparamos con la "Máquina del Tiempo"
         if (diaOperacion.getTime() === fechaHoy.getTime()) {
             textoFechaHora = formatoSoloHora; 
         } else if (diaOperacion.getTime() === fechaManana.getTime()) {
             textoFechaHora = `M-${formatoSoloHora}`; 
+        } else if (diaOperacion.getTime() === fechaAyer.getTime()) {
+            textoFechaHora = `A-${formatoSoloHora}`; // 🆕 Si es ayer, ponemos A-hora
         } else {
             textoFechaHora = formatoSoloFecha; 
         }
