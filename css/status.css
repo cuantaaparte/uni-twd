@@ -1,0 +1,21 @@
+.estado-tag {
+    border-radius: 15px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    color: white; 
+    display: flex; align-items: center; justify-content: center;
+    min-width: 100px; height: 30px; margin: auto;
+}
+
+.state-programado { background-color: var(--status-green); }
+.state-retrasado { background-color: var(--status-yellow); color: #333; }
+.state-cancelado { background-color: var(--status-red); }
+.state-embarcando { background-color: #9b59b6; animation: parpadeo 1.5s infinite; }
+.state-en_ruta { background-color: #3498db; }
+.state-llegado { background-color: #95a5a6; }
+
+@keyframes parpadeo {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}

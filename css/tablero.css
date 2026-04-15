@@ -1,0 +1,44 @@
+.tabla-header, .operacion-row {
+    display: grid;
+    grid-template-columns: 0.8fr 1fr 1.5fr 1fr 1fr 1.2fr;
+    gap: 10px;
+    padding: 15px;
+}
+
+.modo-gestor .tabla-header, 
+.modo-gestor .operacion-row {
+    grid-template-columns: 0.8fr 1fr 1.5fr 1fr 1fr 1.2fr 0.8fr; 
+}
+
+.tabla-header span, .operacion-row span, .acciones-gestor {
+    display: flex; align-items: center; justify-content: center; text-align: center;
+}
+
+.tabla-header {
+    background-color: var(--table-header-bg);
+    font-weight: bold;
+    border-bottom: 2px solid var(--border-color);
+    color: var(--text-muted);
+}
+
+.operacion-row {
+    background-color: var(--row-bg);
+    border-bottom: 1px solid var(--row-border);
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.operacion-row:hover {
+    background-color: var(--row-hover-bg);
+    transform: scale(1.01); 
+}
+
+@media (max-width: 768px) {
+    .tabla-header, .operacion-row {
+        grid-template-columns: 1fr 1fr 1fr; 
+    }
+    .tabla-header span:nth-child(4), .tabla-header span:nth-child(5),
+    .operacion-row span:nth-child(4), .operacion-row span:nth-child(5) {
+        display: none;
+    }
+}

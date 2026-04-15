@@ -1,0 +1,62 @@
+/* Botones */
+button {
+    cursor: pointer;
+    border: none;
+    border-radius: 5px;
+    font-weight: bold;
+    transition: background-color 0.3s ease, transform 0.1s ease;
+}
+
+.btn-primary, .btn-full {
+    background-color: var(--accent-blue);
+    color: var(--btn-text);
+}
+
+.btn-primary { padding: 10px 20px; font-size: 0.9rem; }
+.btn-full { width: 100%; padding: 12px; font-size: 1.1rem; margin-top: 15px; }
+.btn-secondary { background-color: #7f8fa6; color: white; padding: 10px 20px; }
+.btn-danger { background-color: var(--status-red); color: white; padding: 10px 20px; }
+.btn-icon { background: none; font-size: 1.2rem; }
+.btn-icon:hover { transform: scale(1.2); }
+
+/* Theme Switch */
+.theme-switch {
+    position: relative; display: inline-block;
+    width: 60px; height: 32px; margin-right: 20px;
+}
+.theme-switch input { opacity: 0; width: 0; height: 0; }
+.slider {
+    position: absolute; cursor: pointer;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: #34495e; transition: 0.4s;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 6px; border-radius: 34px;
+}
+.slider:before {
+    position: absolute; content: "";
+    height: 24px; width: 24px; left: 4px; bottom: 4px;
+    background-color: white; transition: 0.4s; border-radius: 50%; z-index: 2;
+}
+input:checked + .slider { background-color: #f1c40f; }
+input:checked + .slider:before { transform: translateX(28px); }
+
+/* Modales */
+.modal-overlay {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex; justify-content: center; align-items: center; z-index: 1000;
+}
+.modal-content {
+    background-color: var(--panel-bg); padding: 30px 40px;
+    border-radius: 12px; width: 90%; max-width: 400px;
+    position: relative; border: 1px solid var(--border-color);
+}
+.close { position: absolute; top: 15px; right: 20px; font-size: 28px; cursor: pointer; }
+
+/* Formularios */
+.form-group { display: flex; flex-direction: column; margin-bottom: 15px; }
+input[type="text"], input[type="email"], input[type="password"], input[type="datetime-local"], select {
+    padding: 12px; border: 2px solid var(--input-border);
+    border-radius: 6px; background-color: var(--input-bg);
+    color: var(--text-main); width: 100%;
+}
