@@ -4,18 +4,15 @@ import { normalizarIdColumna } from "../utils/helpers.js";
 const ROL_GESTOR = "GESTOR";
 
 export class TableroController {
-    // Añadimos parámetros por defecto al constructor para Inyección de Dependencias
     constructor(
         tableroViewInstance = null, 
         inputBusquedaOverride = null, 
         selectEstadoOverride = null
     ) {
-        // Si no le pasamos vista (producción), crea la real. Si le pasamos una (testing), usa la simulada.
         this.tableroView = tableroViewInstance || new TableroView();
         this.columnaActivaID = "FECHA-HORA"; 
         this.ordenAscendente = true;
         
-        // Prioriza los elementos pasados por parámetro (para el test), si no, usa el DOM real
         this.inputBusqueda = inputBusquedaOverride || document.getElementById("busqueda-codigo");
         this.selectEstado = selectEstadoOverride || document.getElementById("filtro-estado");
 
@@ -31,7 +28,6 @@ export class TableroController {
             tablerosContenedorGlobal.addEventListener("click", (eventoClic) => this.handleTableClicks(eventoClic));
         }
 
-        // Usamos optional chaining robusto para no romper el test si el modal no existe
         const btnClose = document.getElementById("close-modal-detalle");
         if (btnClose) {
             btnClose.addEventListener("click", () => document.getElementById("modal-detalle")?.classList.add("hidden"));
@@ -98,7 +94,26 @@ export class TableroController {
     }
 
     handleTableClicks(eventoClic) {
-        // 1. Buscamos la cabecera (usamos textContent como salvavidas para el test)
+        // 1. Mostrar/Ocultar Historial (Acordeón y Memoria Local)
+        const toggleBtn = eventoClic.target.closest(".toggle-historico");
+        if (toggleBtn) {
+            const targetId = toggleBtn.getAttribute("data-target");
+            const targetDiv = document.getElementById(targetId);
+            
+            // Alternamos la clase oculta
+            targetDiv.classList.toggle("hidden");
+            
+            // 💾 GUARDAR ESTADO: Si NO tiene la clase 'hidden', está abierto (true)
+            const estaAhoraAbierto = !targetDiv.classList.contains("hidden");
+            localStorage.setItem(`estado-${targetId}`, estaAhoraAbierto);
+            
+            // Animamos las flechitas minimalistas en los extremos de forma segura
+            toggleBtn.firstElementChild.innerText = estaAhoraAbierto ? "▲" : "▼";
+            toggleBtn.lastElementChild.innerText = estaAhoraAbierto ? "▲" : "▼";
+            return;
+        }
+
+        // 2. Ordenación por cabeceras
         const cabeceraClicada = eventoClic.target.closest(".tabla-header span") || 
                                 (eventoClic.target.parentElement?.classList.contains("tabla-header") ? eventoClic.target : null);
         
@@ -115,7 +130,6 @@ export class TableroController {
                 this.ordenAscendente = true;
             }
 
-            // Actualizamos visualmente las flechitas
             document.querySelectorAll(".tabla-header span").forEach(cabeceraSpan => {
                 const txt = cabeceraSpan.innerText || cabeceraSpan.textContent || "";
                 const idIterada = normalizarIdColumna(txt);
@@ -132,7 +146,7 @@ export class TableroController {
             return;
         }
 
-        // Mostrar Detalle
+        // 3. Mostrar Detalle de la Operación
         const filaTablaClicada = eventoClic.target.closest(".operacion-row");
         if (filaTablaClicada && !eventoClic.target.closest(".acciones-gestor")) { 
             const idOperacion = filaTablaClicada.getAttribute("data-id");
@@ -176,11 +190,9 @@ export class TableroController {
 
         if (usuarioActual) {
             if (!infoUsuarioLogueado) {
-                // Creamos el contenedor del Badge
                 infoUsuarioLogueado = document.createElement("div");
                 infoUsuarioLogueado.id = "info-usuario-activo";
                 
-                // 🎨 ESTILOS DEL USER BADGE (Efecto Píldora Profesional)
                 infoUsuarioLogueado.style.display = "flex";
                 infoUsuarioLogueado.style.alignItems = "center";
                 infoUsuarioLogueado.style.gap = "10px";
@@ -194,16 +206,15 @@ export class TableroController {
                 contenedorAuth.prepend(infoUsuarioLogueado);
             }
 
-            // Colores e iconos dinámicos según el Rol
             const esGestor = usuarioActual.rol === "GESTOR";
             const colorRol = esGestor ? "var(--status-green)" : "var(--accent-blue)";
             const iconoRol = esGestor ? "👨‍✈️" : "👤";
 
-            // Inyectamos el contenido del Badge
             infoUsuarioLogueado.innerHTML = `
                 <span style="font-size: 1.1rem;">${iconoRol}</span>
                 <span style="font-weight: 600; color: var(--text-main); font-size: 0.9rem;">
-                    ${usuarioActual.email.split('@')[0]} </span>
+                    ${usuarioActual.email.split('@')[0]} 
+                </span>
                 <span style="background-color: ${colorRol}; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.7rem; font-weight: bold; letter-spacing: 0.5px;">
                     ${usuarioActual.rol}
                 </span>
@@ -211,9 +222,5 @@ export class TableroController {
         } else if (infoUsuarioLogueado) {
             infoUsuarioLogueado.remove();
         }
-
-        // ❌ Aquí antes estaba la función 'alternarBotonAdmin' que creaba clones.
-        // La hemos eliminado porque ahora la Vista (AuthView) se encarga de mostrar/ocultar 
-        // los botones estáticos del HTML. ¡Código mucho más limpio!
     }
 }

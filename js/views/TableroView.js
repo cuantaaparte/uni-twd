@@ -7,51 +7,82 @@ export class TableroView {
     }
 
     render(salidas, llegadas, operadores, puntos, usuarioActivo = null) {
-        this.listaSalidas.innerHTML = "";
-        this.listaLlegadas.innerHTML = "";
-
         const esGestor = usuarioActivo && usuarioActivo.rol === "GESTOR";
 
         [this.panelSalidas, this.panelLlegadas].forEach(panel => 
             esGestor ? panel.classList.add("modo-gestor") : panel.classList.remove("modo-gestor")
         );
 
-        salidas.forEach(operacion => {
-            const operadorEncontrado = operadores.find(operador => operador.operadorId === operacion.operadorId);
-            const puntoEncontrado = puntos.find(punto => punto.puntoId === operacion.puntoId);
-            this.listaSalidas.innerHTML += this.generarFilaHTML(operacion, operadorEncontrado, puntoEncontrado, esGestor);
-        });
+        const limite24h = Date.now() - (24 * 60 * 60 * 1000);
 
-        llegadas.forEach(operacion => {
-            const operadorEncontrado = operadores.find(operador => operador.operadorId === operacion.operadorId);
-            const puntoEncontrado = puntos.find(punto => punto.puntoId === operacion.puntoId);
-            this.listaLlegadas.innerHTML += this.generarFilaHTML(operacion, operadorEncontrado, puntoEncontrado, esGestor);
-        });
+        // 🛠️ TRUCO JS: Forzamos que la hora SIEMPRE sea un número
+        const obtenerTiempo = (hora) => new Date(Number(hora) || hora).getTime();
+
+        const generarHTMLBloque = (operaciones) => {
+            return operaciones.map(op => {
+                const opEncontrado = operadores.find(o => o.operadorId === op.operadorId);
+                const ptEncontrado = puntos.find(p => p.puntoId === op.puntoId);
+                return this.generarFilaHTML(op, opEncontrado, ptEncontrado, esGestor);
+            }).join("");
+        };
+
+        const renderizarPanel = (operaciones, contenedorTarget, idToggle) => {
+            const historicas = operaciones.filter(op => obtenerTiempo(op.horaProgramada) < limite24h);
+            const recientes = operaciones.filter(op => obtenerTiempo(op.horaProgramada) >= limite24h);
+
+            // 🔍 Recuperamos el estado guardado (abierto o cerrado tras F5)
+            const estaAbierto = localStorage.getItem(`estado-${idToggle}`) === "true";
+            const claseHidden = estaAbierto ? "" : "hidden";
+            const iconoFlecha = estaAbierto ? "▲" : "▼";
+
+            let html = "";
+            
+            // 1. Bloque Histórico
+            html += `<div id="${idToggle}" class="${claseHidden}">`;
+            if (historicas.length === 0) {
+                html += `<div style="padding: 15px; text-align: center; color: var(--text-muted, gray); font-style: italic; border-bottom: 2px solid var(--border-color);">
+                            Ninguna operación de hace más de 24h
+                        </div>`;
+            } else {
+                html += `<div class="tabla-cuerpo cuerpo-historico">${generarHTMLBloque(historicas)}</div>`;
+            }
+            html += `</div>`;
+
+            // 2. Barra Desplegable Minimalista
+            html += `<div class="toggle-historico" data-target="${idToggle}">
+                        <span>${iconoFlecha}</span> 
+                        <span style="font-size:0.85rem; font-weight:bold; letter-spacing:1px; text-transform:uppercase;">Historial (> 24h)</span> 
+                        <span>${iconoFlecha}</span>
+                    </div>`;
+
+            // 3. Bloque Reciente
+            html += `<div class="tabla-cuerpo cuerpo-reciente">${generarHTMLBloque(recientes)}</div>`;
+
+            contenedorTarget.innerHTML = html;
+        };
+
+        renderizarPanel(salidas, this.listaSalidas, "hist-salidas");
+        renderizarPanel(llegadas, this.listaLlegadas, "hist-llegadas");
     }
 
     generarFilaHTML(operacion, operador, punto, esGestor) {
-        // ---  LÓGICA DE FECHAS (Hoy, Mañana, Ayer, Otros) --- 
-        const fechaOperacion = new Date(operacion.horaProgramada);
+        const fechaOperacion = new Date(Number(operacion.horaProgramada) || operacion.horaProgramada);
         
-        //  Comprobar si la fecha es pasada (para poner en rojo)
+        // Comprobar si la fecha es pasada
         const timestampOperacion = fechaOperacion.getTime();
         const esPasada = timestampOperacion < Date.now();
-        // En vez de clase de CSS, inyectamos el estilo directo rojo brillante si es pasada
         const estiloColorFecha = esPasada ? "color: #ff4d4d; font-weight: bold;" : ""; 
         
-        // 1️⃣ Obtenemos el inicio del día actual
+        // Tiempos relativos
         const fechaHoy = new Date();
         fechaHoy.setHours(0, 0, 0, 0);
         
-        // 2️⃣ Obtenemos el inicio del día de mañana (+1 día)
         const fechaManana = new Date(fechaHoy);
         fechaManana.setDate(fechaManana.getDate() + 1);
 
-        // 3️⃣ Obtenemos el inicio del día de ayer (-1 día) 🆕
         const fechaAyer = new Date(fechaHoy);
         fechaAyer.setDate(fechaAyer.getDate() - 1);
         
-        // Obtenemos el inicio del día de la operación
         const diaOperacion = new Date(fechaOperacion);
         diaOperacion.setHours(0, 0, 0, 0);
 
@@ -59,29 +90,26 @@ export class TableroView {
         const formatoSoloHora = fechaOperacion.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
         const formatoSoloFecha = fechaOperacion.toLocaleDateString();
 
-        // 🔄 Comparamos con la "Máquina del Tiempo"
         if (diaOperacion.getTime() === fechaHoy.getTime()) {
             textoFechaHora = formatoSoloHora; 
         } else if (diaOperacion.getTime() === fechaManana.getTime()) {
             textoFechaHora = `M-${formatoSoloHora}`; 
         } else if (diaOperacion.getTime() === fechaAyer.getTime()) {
-            textoFechaHora = `A-${formatoSoloHora}`; // 🆕 Si es ayer, ponemos A-hora
+            textoFechaHora = `A-${formatoSoloHora}`; 
         } else {
             textoFechaHora = formatoSoloFecha; 
         }
 
-        // ---  LÓGICA DE ICONOS Y EMOJIS ---
+        // Iconos y datos
         const urlIcono = operador ? operador.urlIcono : "🟧";
         const siglasOperador = operador ? operador.siglas : "N/A";
         
-        // Ahora detecta si empieza por http, si tiene una barra de carpeta (/) o un punto de extensión (.png)
         const esImagen = urlIcono && (urlIcono.startsWith("http") || urlIcono.includes("/") || urlIcono.includes("."));
 
         const htmlIcono = esImagen
             ? `<img src="${urlIcono}" alt="${siglasOperador}" width="20" style="margin-right: 5px; vertical-align: middle;">`
             : `<span style="font-size: 1.2rem; margin-right: 5px; vertical-align: middle;">${urlIcono}</span>`;
 
-        // --- RESTO DE DATOS ---
         const ciudadDestinoOrigen = operacion.sentido === "salida" ? operacion.destino : operacion.origen;
         const nombreOperador = operador ? operador.nombre : "Desconocido";
 

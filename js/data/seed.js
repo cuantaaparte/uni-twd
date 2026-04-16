@@ -94,7 +94,13 @@ export function inicializarDatos(){
         new Operacion(TIPOS_OPERACION.TREN, "AVE88", SENTIDOS.LLEGADA, "Valencia", "Madrid", ahora + DIA, 2, 2),
 
         // 13. PASADO MAÑANA (+48h) | Vuelo | Salida | PROGRAMADO
-        new Operacion(TIPOS_OPERACION.VUELO, "AEA44", SENTIDOS.SALIDA, "Madrid", "Lisboa", ahora + (DIA * 2), 3, 3)
+        new Operacion(TIPOS_OPERACION.VUELO, "AEA44", SENTIDOS.SALIDA, "Madrid", "Lisboa", ahora + (DIA * 2), 3, 3),
+
+        // 16. HACE 4 DÍAS (-96h) | Vuelo | Salida | LLEGADO
+        new Operacion(TIPOS_OPERACION.VUELO, "RYR777", SENTIDOS.SALIDA, "Madrid", "Roma", ahora - (DIA * 4), 5, 1),
+
+        // 17. HACE 5 DÍAS (-120h) | Tren | Salida | LLEGADO
+        new Operacion(TIPOS_OPERACION.TREN, "AVE555", SENTIDOS.SALIDA, "Madrid", "Sevilla", ahora - (DIA * 5), 2, 5)
     ];
 
     // 🔄 APLICAMOS LOS ESTADOS ESPECÍFICOS (El constructor suele poner PROGRAMADO por defecto)
@@ -107,6 +113,8 @@ export function inicializarDatos(){
     operaciones[8].cambiarEstado("LLEGADO");
     operaciones[9].cambiarEstado("LLEGADO");
     operaciones[10].cambiarEstado("LLEGADO");
+    operaciones[14].cambiarEstado("LLEGADO");
+    operaciones[15].cambiarEstado("LLEGADO");
     // [6] y [7] se quedan como PROGRAMADO por defecto
 
     /*

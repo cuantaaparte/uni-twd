@@ -96,8 +96,6 @@ header {
    ========================================= */
 .tabla-cuerpo {
     /* Ajusta este valor si tus filas son más altas o bajas. 
-       Unos 260px-280px suelen ser 4 viajes exactos. */
-    max-height: 280px; 
     overflow-y: auto; /* Activa el scroll vertical solo si es necesario */
     overflow-x: hidden; /* Evita scrolls horizontales raros */
 }
@@ -121,3 +119,34 @@ header {
     background: var(--btn-text, #ffffff); /* Brilla un poco al pasar el ratón */
 }
 
+/* =========================================
+    BARRA DESPLEGABLE HISTORIAL
+   ========================================= */
+.toggle-historico {
+    background-color: var(--filter-bg); 
+    color: var(--text-main);
+    /* 10px arriba/abajo, 20px a los lados para separar las flechas del borde */
+    padding: 10px 20px; 
+    cursor: pointer;
+    display: flex;
+    /* ✨ LA MAGIA: Empuja el primer y último elemento a los extremos, centrando el del medio */
+    justify-content: space-between; 
+    align-items: center;
+    border-bottom: 1px solid var(--border-color);
+    transition: all 0.2s;
+}
+
+.toggle-historico:hover {
+    background-color: var(--accent-blue);
+    color: white;
+}
+
+/* Modificadores de tamaño para los 2 scrolls separados */
+.cuerpo-historico {
+    max-height: 210px; /* 📏 Límite de 3 viajes aprox */
+    border-bottom: 2px solid var(--border-color); /* Separación visual de la barra */
+}
+
+.cuerpo-reciente {
+    max-height: 280px; /* 📏 Límite de 4 viajes aprox */
+}
