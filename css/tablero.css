@@ -1,13 +1,75 @@
-.tabla-header, .operacion-row {
-    display: grid;
-    grid-template-columns: 0.8fr 1fr 1.5fr 1fr 1fr 1.2fr;
-    gap: 10px;
-    padding: 15px;
+/* =========================================
+    ESTRUCTURA Y SCROLL DE LAS TABLAS
+   ========================================= */
+
+@media (min-width: 1600px) {
+    .tableros-container {
+        flex-direction: row; 
+        align-items: flex-start;
+    }
+    .panel {
+        flex: 1; 
+    }
 }
 
-.modo-gestor .tabla-header, 
-.modo-gestor .operacion-row {
-    grid-template-columns: 0.8fr 1fr 1.5fr 1fr 1fr 1.2fr 0.8fr; 
+.tabla-cuerpo {
+    overflow-x: hidden; 
+}
+
+.tabla-cuerpo::-webkit-scrollbar {
+    width: 8px; 
+}
+
+.tabla-cuerpo::-webkit-scrollbar-track {
+    background: var(--filter-bg); 
+    border-radius: 4px;
+}
+
+.tabla-cuerpo::-webkit-scrollbar-thumb {
+    background: var(--accent-blue); 
+    border-radius: 4px;
+}
+
+.tabla-cuerpo::-webkit-scrollbar-thumb:hover {
+    background: var(--btn-text, #ffffff); 
+}
+
+/* =========================================
+    BARRA DESPLEGABLE HISTORIAL
+   ========================================= */
+.toggle-historico {
+    background-color: var(--filter-bg); 
+    color: var(--text-main);
+    padding: 10px 20px; 
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between; 
+    align-items: center;
+    border-bottom: 1px solid var(--border-color);
+    transition: all 0.2s;
+}
+
+.toggle-historico:hover {
+    background-color: var(--accent-blue);
+    color: white;
+}
+
+.cuerpo-historico {
+    max-height: 210px; 
+    border-bottom: 2px solid var(--border-color); 
+}
+
+.cuerpo-reciente {
+    max-height: 280px; 
+}
+
+/* =========================================
+    GRILLA DE LAS TABLAS DEL TABLERO
+   ========================================= */
+
+#panel-salidas, #panel-llegadas {
+    container-type: inline-size;
+    container-name: panel-tabla;
 }
 
 .tabla-header span, .operacion-row span, .acciones-gestor {
@@ -33,12 +95,71 @@
     transform: scale(1.01); 
 }
 
-@media (max-width: 768px) {
-    .tabla-header, .operacion-row {
-        grid-template-columns: 1fr 1fr 1fr; 
+.tabla-header > span, .operacion-row > span, .operacion-row > nav {
+    word-wrap: break-word; 
+    overflow: hidden;
+    padding-right: 5px;
+    line-height: 1.2; 
+    text-align: center;
+}
+
+.tabla-header, .operacion-row {
+    display: grid;
+    width: 100%;
+    grid-template-columns: 1.2fr 1fr 1.5fr 1.5fr 1fr 1.5fr;
+    gap: 10px;
+    padding: 15px;
+    align-items: center;
+}
+
+.modo-gestor .tabla-header, 
+.modo-gestor .operacion-row {
+    grid-template-columns: 1.2fr 1fr 1.5fr 1.5fr 1fr 1.5fr 80px;
+}
+
+/* =========================================
+    RESPONSIVE INTELIGENTE (Container Queries)
+   ========================================= */
+
+@container panel-tabla (max-width: 750px) {
+    .acciones-gestor { display: none !important; }
+    .modo-gestor .tabla-header, .modo-gestor .operacion-row {
+        grid-template-columns: 1.2fr 1fr 1.5fr 1.5fr 1fr 1.5fr !important;
     }
-    .tabla-header span:nth-child(4), .tabla-header span:nth-child(5),
-    .operacion-row span:nth-child(4), .operacion-row span:nth-child(5) {
-        display: none;
+}
+
+@container panel-tabla (max-width: 650px) {
+    .tabla-header > span:nth-child(4),
+    .operacion-row > span:nth-child(4) { display: none !important; }
+    .tabla-header, .operacion-row,
+    .modo-gestor .tabla-header, .modo-gestor .operacion-row {
+        grid-template-columns: 1.2fr 1fr 1.5fr 1fr 1.5fr !important;
+    }
+}
+
+@container panel-tabla (max-width: 550px) {
+    .tabla-header > span:nth-child(3),
+    .operacion-row > span:nth-child(3) { display: none !important; }
+    .tabla-header, .operacion-row,
+    .modo-gestor .tabla-header, .modo-gestor .operacion-row {
+        grid-template-columns: 1.2fr 1fr 1fr 1.5fr !important;
+    }
+}
+
+@container panel-tabla (max-width: 450px) {
+    .tabla-header > span:nth-child(2),
+    .operacion-row > span:nth-child(2) { display: none !important; }
+    .tabla-header, .operacion-row,
+    .modo-gestor .tabla-header, .modo-gestor .operacion-row {
+        grid-template-columns: 1.2fr 1fr 1.5fr !important;
+    }
+}
+
+@container panel-tabla (max-width: 350px) {
+    .tabla-header > span:nth-child(5),
+    .operacion-row > span:nth-child(5) { display: none !important; }
+    .tabla-header, .operacion-row,
+    .modo-gestor .tabla-header, .modo-gestor .operacion-row {
+        grid-template-columns: 1.2fr 1.5fr !important;
     }
 }
