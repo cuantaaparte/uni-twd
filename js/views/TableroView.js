@@ -37,7 +37,17 @@ export class TableroView {
 
             let html = "";
             
-            // 1. Bloque Histórico
+            // 1. Bloque Reciente (AHORA VA PRIMERO 🥇)
+            html += `<div class="tabla-cuerpo cuerpo-reciente">${generarHTMLBloque(recientes)}</div>`;
+
+            // 2. Barra Desplegable Minimalista (EN MEDIO 🍔)
+            html += `<div class="toggle-historico" data-target="${idToggle}">
+                        <span>${iconoFlecha}</span> 
+                        <span style="font-size:0.85rem; font-weight:bold; letter-spacing:1px; text-transform:uppercase;">Historial (Hace más de 24h)</span> 
+                        <span>${iconoFlecha}</span>
+                    </div>`;
+
+            // 3. Bloque Histórico (AHORA VA AL FINAL ⏬)
             html += `<div id="${idToggle}" class="${claseHidden}">`;
             if (historicas.length === 0) {
                 html += `<div style="padding: 15px; text-align: center; color: var(--text-muted, gray); font-style: italic; border-bottom: 2px solid var(--border-color);">
@@ -48,18 +58,9 @@ export class TableroView {
             }
             html += `</div>`;
 
-            // 2. Barra Desplegable Minimalista
-            html += `<div class="toggle-historico" data-target="${idToggle}">
-                        <span>${iconoFlecha}</span> 
-                        <span style="font-size:0.85rem; font-weight:bold; letter-spacing:1px; text-transform:uppercase;">Historial (> 24h)</span> 
-                        <span>${iconoFlecha}</span>
-                    </div>`;
-
-            // 3. Bloque Reciente
-            html += `<div class="tabla-cuerpo cuerpo-reciente">${generarHTMLBloque(recientes)}</div>`;
-
             contenedorTarget.innerHTML = html;
         };
+
 
         renderizarPanel(salidas, this.listaSalidas, "hist-salidas");
         renderizarPanel(llegadas, this.listaLlegadas, "hist-llegadas");
