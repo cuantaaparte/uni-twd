@@ -81,9 +81,24 @@ export class TableroController {
             tablerosContenedorGlobal.addEventListener("click", (eventoClic) => this.handleTableClicks(eventoClic));
         }
 
+        // ==========================================
+        // ❌ CIERRE DEL MODAL DE DETALLES
+        // ==========================================
+        const modalDetalle = document.getElementById("modal-detalle");
         const btnClose = document.getElementById("close-modal-detalle");
+
+        // 1. Cierre con la 'X'
         if (btnClose) {
-            btnClose.addEventListener("click", () => document.getElementById("modal-detalle")?.classList.add("hidden"));
+            btnClose.addEventListener("click", () => modalDetalle?.classList.add("hidden"));
+        }
+
+        // 2. Cierre haciendo clic en el fondo oscuro (overlay)
+        if (modalDetalle) {
+            modalDetalle.addEventListener("click", (e) => {
+                if (e.target.id === "modal-detalle") {
+                    modalDetalle.classList.add("hidden");
+                }
+            });
         }
     }
 
