@@ -4,10 +4,9 @@ import { Usuario, ROLES_USUARIO } from "../models/Usuario.js";
 export class AuthController {
     constructor(onAuthChangedCallback, authViewInstance = null) {
         this.authView = authViewInstance || new AuthView();
-        this.onAuthChanged = onAuthChangedCallback; // Avisamos al main cuando alguien entra/sale
+        this.onAuthChanged = onAuthChangedCallback;
         this.initListeners();
         
-        // Render inicial
         const usuarioActivo = JSON.parse(sessionStorage.getItem("usuarioActivo"));
         this.authView.renderAuthButtons(usuarioActivo);
     }
@@ -17,11 +16,18 @@ export class AuthController {
         document.getElementById("btn-signup")?.addEventListener("click", () => this.authView.show(true));
         document.getElementById("close-modal")?.addEventListener("click", () => this.authView.hide());
 
-        document.getElementById("auth-form")?.addEventListener("submit", (eventoValidacion) => {
-            eventoValidacion.preventDefault();
+        // ✅ Cierre al hacer clic en el fondo oscuro
+        document.getElementById("modal-auth")?.addEventListener("click", (e) => {
+            if (e.target.id === 'modal-auth') {
+                this.authView.hide();
+            }
+        });
+
+        document.getElementById("auth-form")?.addEventListener("submit", (e) => {
+            e.preventDefault();
             const email = document.getElementById("auth-email").value;
             const password = document.getElementById("auth-password").value;
-            const modoFormulario = eventoValidacion.target.dataset.mode;
+            const modoFormulario = e.target.dataset.mode;
             const usuariosGuardados = JSON.parse(localStorage.getItem("usuarios")) || [];
 
             if (modoFormulario === "login") {
@@ -30,7 +36,7 @@ export class AuthController {
                     sessionStorage.setItem("usuarioActivo", JSON.stringify(usuarioValido));
                     this.authView.hide();
                     this.authView.renderAuthButtons(usuarioValido);
-                    this.onAuthChanged(); // Recargar filtros/botones admin
+                    this.onAuthChanged();
                 } else {
                     alert("Credenciales incorrectas ❌");
                 }

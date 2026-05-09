@@ -95,7 +95,7 @@ export class AdminModalsView {
                 <aside id="modal-puntos" class="modal-overlay hidden">
                     <article class="modal-content" style="max-width: 500px;">
                         <span id="close-modal-puntos" class="close">&times;</span>
-                        <h2 style="color: var(--accent-blue); margin-bottom: 15px;">🚪 Gestión de Puntos<h2>
+                        <h2 style="color: var(--accent-blue); margin-bottom: 15px;">🚪 Gestión de Puntos</h2>
                         <form id="form-add-punto" style="display: flex; gap: 10px; margin-bottom: 20px;">
                             <select id="nuevo-pto-tipo" required style="padding: 8px; border-radius: 4px; width: 30%;">
                                 <option value="PUERTA">Puerta</option>

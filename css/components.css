@@ -66,6 +66,42 @@ input[type="text"], input[type="email"], input[type="password"], input[type="dat
 }
 
 /* =========================================
+    LISTAS INTERNAS DE MODALES (Usuarios, Operadores, Puntos)
+   ========================================= */
+
+/* 1. Centramos el texto de las cabeceras de los modales */
+#modal-usuarios .tabla-header,
+#modal-operadores .tabla-header,
+#modal-puntos .tabla-header {
+    display: grid;
+    text-align: center; /* Obliga al texto a ir al centro */
+    padding: 10px;
+}
+
+#modal-usuarios .tabla-header > span,
+#modal-operadores .tabla-header > span,
+#modal-puntos .tabla-header > span {
+    display: flex;
+    justify-content: center; /* Centra horizontalmente */
+    align-items: center;     /* Centra verticalmente */
+}
+
+/* 2. Clase base para las filas de las listas */
+.modal-list-row {
+    display: grid;
+    padding: 10px;
+    border-bottom: 1px solid var(--border-color);
+    align-items: center; /* Centra los elementos verticalmente (útil para los botones) */
+}
+
+/* 3. Centramos el texto de cada celda de la lista (excepto los botones) */
+.modal-list-row > span {
+    display: flex;
+    justify-content: center; /* ¡Bingo! Texto centrado horizontalmente */
+    text-align: center;
+}
+
+/* =========================================
     BARRA DE FILTROS
    ========================================= */
 .filtros {
