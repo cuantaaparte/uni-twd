@@ -36,10 +36,11 @@ export class TableroView {
             const iconoFlecha = estaAbierto ? "▲" : "▼";
 
             let html = "";
-            
+            /* html */
             // 1. Bloque Reciente (AHORA VA PRIMERO 🥇)
             html += `<div class="tabla-cuerpo cuerpo-reciente">${generarHTMLBloque(recientes)}</div>`;
 
+            /* html */
             // 2. Barra Desplegable Minimalista (EN MEDIO 🍔)
             html += `<div class="toggle-historico" data-target="${idToggle}">
                         <span>${iconoFlecha}</span> 
@@ -47,13 +48,16 @@ export class TableroView {
                         <span>${iconoFlecha}</span>
                     </div>`;
 
+            /* html */
             // 3. Bloque Histórico (AHORA VA AL FINAL ⏬)
             html += `<div id="${idToggle}" class="${claseHidden}">`;
             if (historicas.length === 0) {
+                /* html */
                 html += `<div style="padding: 15px; text-align: center; color: var(--text-muted, gray); font-style: italic; border-bottom: 2px solid var(--border-color);">
                             Ninguna operación de hace más de 24h
                         </div>`;
             } else {
+                /* html */
                 html += `<div class="tabla-cuerpo cuerpo-historico">${generarHTMLBloque(historicas)}</div>`;
             }
             html += `</div>`;
@@ -116,6 +120,7 @@ export class TableroView {
 
         let htmlAccionesAdmin = "";
         if (esGestor) {
+            /* html */
             htmlAccionesAdmin = `
                 <nav class="acciones-gestor">
                     <button class="btn-icon btn-editar" data-id="${operacion.operacionId}" title="Editar">✏️</button>
@@ -124,6 +129,7 @@ export class TableroView {
             `;
         }
 
+        /* html */
         return `
             <article class="operacion-row" data-id="${operacion.operacionId}">
                 <span style="${estiloColorFecha}">${textoFechaHora}</span>

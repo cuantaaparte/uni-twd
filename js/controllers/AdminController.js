@@ -219,9 +219,10 @@ export class AdminController {
     renderizarPuntos() {
         const pt = JSON.parse(localStorage.getItem("puntos")) || [];
         document.getElementById("lista-puntos").innerHTML = pt.map(p => `
-            <article style="display:grid; grid-template-columns:1fr 2fr 1fr; padding:10px; border-bottom:1px solid var(--border-color); align-items: center;">
-                <span style="font-weight:bold;">${p.tipo}</span><span>${p.codigo}</span>
-                <button class="btn-borrar-punto" data-id="${p.puntoId}" style="background:#e74c3c; color:white; border:none; border-radius:4px; padding: 6px; cursor:pointer;">Borrar 🗑️</button>
+            <article style="display:grid; grid-template-columns:1fr 2fr 1fr; padding:10px; border-bottom:1px solid var(--border-color); align-items: center; font-size: 1rem;">
+                <span style="font-weight:bold; font-size: 1rem; line-height: 1.2;">${p.tipo}</span>
+                <span style="font-size: 1rem; line-height: 1.2;">${p.codigo}</span>
+                <button class="btn-borrar-punto" data-id="${p.puntoId}" style="background:#e74c3c; color:white; border:none; border-radius:4px; padding: 6px; cursor:pointer; font-size: 0.9rem;">Borrar 🗑️</button>
             </article>`).join("");
     }
 }

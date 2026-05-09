@@ -1,0 +1,118 @@
+export class AdminModalsView {
+    constructor() {
+        this.inyectarModalesAdmin();
+    }
+
+    inyectarModalesAdmin() {
+        /* html */
+        const html = `
+                <aside id="modal-operacion" class="modal-overlay hidden">
+                    <article class="modal-content">
+                        <span id="close-modal-op" class="close">&times;</span>
+                        <h2 id="modal-op-title">✏️ Editar Operación</h2>
+                        <form id="form-operacion">
+                            <input type="hidden" id="op-id">
+                            <div class="form-group">
+                                <label for="op-estado">Estado</label>
+                                <select id="op-estado" required>
+                                    <option value="PROGRAMADO">Programado</option>
+                                    <option value="RETRASADO">Retrasado</option>
+                                    <option value="CANCELADO">Cancelado</option>
+                                    <option value="EMBARCANDO">Embarcando</option>
+                                    <option value="EN_RUTA">En Ruta</option>
+                                    <option value="LLEGADO">Llegado</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="op-operador">Operador</label>
+                                <select id="op-operador" required></select>
+                            </div>
+                            <div class="form-group">
+                                <label for="op-punto">Puerta / Vía</label>
+                                <select id="op-punto" required></select>
+                            </div>
+                            <button type="submit" class="btn-full">Guardar Cambios</button>
+                        </form>
+                    </article>
+                </aside>
+
+                <aside id="modal-crear" class="modal-overlay hidden">
+                    <article class="modal-content">
+                        <span id="close-modal-crear" class="close">&times;</span>
+                        <h2 id="modal-crear-title">➕ Nueva Operación</h2>
+                        <form id="form-crear">
+                            <div class="form-group"><label for="crear-tipo">Tipo</label><select id="crear-tipo" required><option value="vuelo">Vuelo ✈️</option><option value="tren">Tren 🚂</option></select></div>
+                            <div class="form-group"><label for="crear-codigo">Código (ej. IB999)</label><input type="text" id="crear-codigo" required placeholder="Código del transporte"></div>
+                            <div class="form-group"><label for="crear-sentido">Sentido</label><select id="crear-sentido" required><option value="salida">Salida 🛫</option><option value="llegada">Llegada 🛬</option></select></div>
+                            <div class="form-group"><label id="label-ciudad" for="crear-ciudad">Destino</label><input type="text" id="crear-ciudad" required placeholder="Ciudad"></div>
+                            <div class="form-group"><label for="crear-hora">Hora Programada</label><input type="datetime-local" id="crear-hora" required></div>
+                            <div class="form-group"><label for="crear-operador">Operador</label><select id="crear-operador" required></select></div>
+                            <div class="form-group"><label for="crear-punto">Puerta / Vía</label><select id="crear-punto" required></select></div>
+                            <button type="submit" class="btn-full" style="background-color: var(--success-color, #2ecc71);">Crear Operación</button>
+                        </form>
+                    </article>
+                </aside>
+
+                <aside id="modal-usuarios" class="modal-overlay hidden">
+                    <article class="modal-content" style="max-width: 600px;">
+                        <span id="close-modal-usuarios" class="close">&times;</span>
+                        <h2 style="text-align: left; margin-bottom: 20px;">👥 Gestión de Usuarios</h2>
+                        <header class="tabla-header" style="grid-template-columns: 2fr 1fr 1.5fr;">
+                            <span>Email</span>
+                            <span>Rol Actual</span>
+                            <span>Acción</span>
+                        </header>
+                        <section id="lista-usuarios" class="tabla-cuerpo" style="max-height: 350px; overflow-y: auto;"></section>
+                    </article>
+                </aside>
+
+                <aside id="modal-detalle" class="modal-overlay hidden">
+                    <article class="modal-content">
+                        <span id="close-modal-detalle" class="close">&times;</span>
+                        <h2 id="titulo-detalle" style="color: var(--accent-blue); margin-bottom: 15px;">✈️ Detalles de la Operación</h2>
+                        <section id="detalle-contenido" style="line-height: 1.8; font-size: 1.05rem;"></section>
+                    </article>
+                </aside>
+
+                <aside id="modal-operadores" class="modal-overlay hidden">
+                    <article class="modal-content" style="max-width: 500px;">
+                        <span id="close-modal-operadores" class="close">&times;</span>
+                        <h2 style="color: var(--accent-blue); margin-bottom: 15px;">🏢 Gestión de Operadores</h2>
+                        <form id="form-add-operador" style="display: flex; gap: 10px; margin-bottom: 20px">
+                            <input type="text" id="nuevo-op-nombre" placeholder="Nombre (ej. Vueling)" required style="flex:1; padding: 8px; border-radius: 4px; border: 1px solid var(--border-color); background: var(--panel-bg); color: var(--text-main);">
+                            <input type="text" id="nuevo-op-siglas" placeholder="Siglas" required style="width: 80px; padding: 8px; border-radius: 4px; border: 1px solid var(--border-color); background: var(--panel-bg); color: var(--text-main);">
+                            <button type="submit" class="btn-primary" style="padding: 8px 15px;">Añadir</button>
+                        </form>
+                        <header class="tabla-header" style="grid-template-columns: 2fr 1fr 1fr;">
+                            <span>Nombre</span>
+                            <span>Siglas</span>
+                            <span>Acción</span>
+                        </header>
+                        <section id="lista-operadores" class="tabla-cuerpo" style="max-height: 250px;overflow-y: auto;"></section>
+                    </article>
+                </aside>
+
+                <aside id="modal-puntos" class="modal-overlay hidden">
+                    <article class="modal-content" style="max-width: 500px;">
+                        <span id="close-modal-puntos" class="close">&times;</span>
+                        <h2 style="color: var(--accent-blue); margin-bottom: 15px;">🚪 Gestión de Puntos<h2>
+                        <form id="form-add-punto" style="display: flex; gap: 10px; margin-bottom: 20px;">
+                            <select id="nuevo-pto-tipo" required style="padding: 8px; border-radius: 4px; width: 30%;">
+                                <option value="PUERTA">Puerta</option>
+                                <option value="VIA">Vía</option>
+                            </select>
+                            <input type="text" id="nuevo-pto-codigo" placeholder="Código (ej. T4-55)" required style="flex:1; padding: 8px; border-radius: 4px; border: 1px solid var(--border-color); background: var(--panel-bg); color: var(--text-main);">
+                            <button type="submit" class="btn-primary" style="padding: 8px 15px;">Añadir</button>
+                        </form>
+                        <header class="tabla-header" style="grid-template-columns: 1fr 2fr 1fr;">
+                            <span>Tipo</span>
+                            <span>Código</span>
+                            <span>Acción</span>
+                        </header>
+                        <section id="lista-puntos" class="tabla-cuerpo" style="max-height: 250px; overflow-y: auto;"></section>
+                    </article>
+                </aside>
+            `;
+        document.body.insertAdjacentHTML("beforeend", html);
+    }
+}
