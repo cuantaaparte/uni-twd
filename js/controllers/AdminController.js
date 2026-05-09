@@ -28,6 +28,40 @@ export class AdminController {
         document.getElementById("form-add-punto")?.addEventListener("submit", (e) => this.handleCrearPunto(e));
 
         document.body.addEventListener("click", (e) => this.handleGlobalClicks(e));
+
+        // 🔄 Escuchar cambios en el selector de Tipo (Select Dependiente)
+        const selectTipoCrear = document.getElementById("crear-tipo");
+        if (selectTipoCrear) {
+            selectTipoCrear.addEventListener("change", (e) => {
+                this.actualizarDesplegablePuntos(e.target.value);
+            });
+        }
+    }
+
+    // ==========================================
+    // 🔄 LÓGICA DE SELECTS DEPENDIENTES
+    // ==========================================
+    actualizarDesplegablePuntos(tipoSeleccionado) {
+        const todosLosPuntos = JSON.parse(localStorage.getItem("puntos")) || [];
+        const esVuelo = tipoSeleccionado.toLowerCase().includes("vuelo");
+        const tipoBuscado = esVuelo ? "puerta" : "via";
+
+        // 1. Filtrar las opciones del desplegable
+        const puntosFiltrados = todosLosPuntos.filter(p => p.tipo.toLowerCase() === tipoBuscado);
+        const selectPunto = document.getElementById("crear-punto");
+        
+        if (selectPunto) {
+            selectPunto.innerHTML = puntosFiltrados.map(p => 
+                `<option value="${p.puntoId}">${p.codigo}</option>`
+            ).join("");
+
+            // 2. ✨ NUEVO: Cambiar el texto del título (label) dinámicamente
+            // Buscamos la etiqueta que está vinculada a este select
+            const labelPunto = document.querySelector('label[for="crear-punto"]') || selectPunto.previousElementSibling;
+            if (labelPunto) {
+                labelPunto.innerText = esVuelo ? "Puerta" : "Vía";
+            }
+        }
     }
 
     handleGlobalClicks(e) {
@@ -58,11 +92,17 @@ export class AdminController {
             return;
         }
 
+        // Apertura Modal NUEVA OPERACIÓN
         if (e.target.closest("#btn-nueva-operacion")) {
+            // 1. Cargamos Operadores
             const op = JSON.parse(localStorage.getItem("operadores")) || [];
-            const pt = JSON.parse(localStorage.getItem("puntos")) || [];
             document.getElementById("crear-operador").innerHTML = op.map(o => `<option value="${o.operadorId}">${o.nombre}</option>`).join("");
-            document.getElementById("crear-punto").innerHTML = pt.map(p => `<option value="${p.puntoId}">${p.codigo}</option>`).join("");
+            
+            // 2. Cargamos los Puntos (Filtrados por lo que esté seleccionado por defecto)
+            const tipoInicial = document.getElementById("crear-tipo").value;
+            this.actualizarDesplegablePuntos(tipoInicial);
+            
+            // 3. Mostramos el modal
             document.getElementById("modal-crear")?.classList.remove("hidden");
         }
         
