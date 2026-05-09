@@ -20,8 +20,35 @@ export class TableroController {
     }
 
     initListeners() {
-        if(this.inputBusqueda) this.inputBusqueda.addEventListener("input", () => this.aplicarFiltros());
-        if(this.selectEstado) this.selectEstado.addEventListener("change", () => this.aplicarFiltros());
+        // ==========================================
+        // 💾 1. MEMORIA PARA LA BÚSQUEDA Y EL FILTRO
+        // ==========================================
+        if (this.inputBusqueda) {
+            // A. Si había algo guardado de antes (por un F5), lo volvemos a poner en la caja
+            const busquedaGuardada = sessionStorage.getItem("memoriaBusqueda");
+            if (busquedaGuardada) {
+                this.inputBusqueda.value = busquedaGuardada;
+            }
+
+            // B. Cada vez que el usuario escriba una letra, la guardamos en secreto
+            this.inputBusqueda.addEventListener("input", (e) => {
+                sessionStorage.setItem("memoriaBusqueda", e.target.value);
+                this.aplicarFiltros();
+            });
+        }
+
+        if (this.selectEstado) {
+            // Hacemos exactamente el mismo truco para el desplegable de Estados
+            const estadoGuardado = sessionStorage.getItem("memoriaEstado");
+            if (estadoGuardado) {
+                this.selectEstado.value = estadoGuardado;
+            }
+
+            this.selectEstado.addEventListener("change", (e) => {
+                sessionStorage.setItem("memoriaEstado", e.target.value);
+                this.aplicarFiltros();
+            });
+        }
 
         const tablerosContenedorGlobal = document.querySelector(".tableros-container");
         if(tablerosContenedorGlobal) {
