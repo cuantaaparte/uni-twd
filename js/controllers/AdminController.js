@@ -36,6 +36,20 @@ export class AdminController {
                 this.actualizarDesplegablePuntos(e.target.value);
             });
         }
+
+        // 🔄 Escuchar cambios en el selector de Sentido (Salida/Llegada)
+        const selectSentidoCrear = document.getElementById("crear-sentido");
+        if (selectSentidoCrear) {
+            selectSentidoCrear.addEventListener("change", (e) => {
+                const inputCiudad = document.getElementById("crear-ciudad");
+                const labelCiudad = document.querySelector('label[for="crear-ciudad"]') || (inputCiudad ? inputCiudad.previousElementSibling : null);
+                
+                if (labelCiudad) {
+                    // Si es llegada, preguntamos de dónde viene. Si es salida, a dónde va.
+                    labelCiudad.innerText = e.target.value === "llegada" ? "Origen" : "Destino";
+                }
+            });
+        }
     }
 
     // ==========================================
@@ -93,16 +107,27 @@ export class AdminController {
         }
 
         // Apertura Modal NUEVA OPERACIÓN
+        // Apertura Modal NUEVA OPERACIÓN
         if (e.target.closest("#btn-nueva-operacion")) {
             // 1. Cargamos Operadores
             const op = JSON.parse(localStorage.getItem("operadores")) || [];
             document.getElementById("crear-operador").innerHTML = op.map(o => `<option value="${o.operadorId}">${o.nombre}</option>`).join("");
             
             // 2. Cargamos los Puntos (Filtrados por lo que esté seleccionado por defecto)
-            const tipoInicial = document.getElementById("crear-tipo").value;
+            const tipoInicial = document.getElementById("crear-tipo")?.value || "";
             this.actualizarDesplegablePuntos(tipoInicial);
+
+            // 3. ✨ NUEVO: Ajustamos el texto de Origen/Destino según el sentido inicial
+            const selectSentido = document.getElementById("crear-sentido");
+            const inputCiudad = document.getElementById("crear-ciudad");
+            if (selectSentido && inputCiudad) {
+                const labelCiudad = document.querySelector('label[for="crear-ciudad"]') || inputCiudad.previousElementSibling;
+                if (labelCiudad) {
+                    labelCiudad.innerText = selectSentido.value === "llegada" ? "Origen" : "Destino";
+                }
+            }
             
-            // 3. Mostramos el modal
+            // 4. Mostramos el modal
             document.getElementById("modal-crear")?.classList.remove("hidden");
         }
         
