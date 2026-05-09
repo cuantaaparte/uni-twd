@@ -50,6 +50,32 @@ export class TableroController {
             });
         }
 
+        // ==========================================
+        // ➡️ 2. EVENTO PARA EXPANDIR TABLAS EN MÓVIL
+        // ==========================================
+        const tableros = document.querySelectorAll(".panel");
+        tableros.forEach(panel => {
+            const btnExpandir = panel.querySelector(".btn-expandir-tabla");
+            if (btnExpandir) {
+                btnExpandir.addEventListener("click", () => {
+                    const estaExpandida = panel.classList.toggle("tabla-expandida");
+                    
+                    // Cambiamos la flecha visualmente (> o <)
+                    if (estaExpandida) {
+                        btnExpandir.innerHTML = "&#10094;"; // Flecha apuntando a la izquierda <
+                        btnExpandir.title = "Contraer tabla";
+                    } else {
+                        btnExpandir.innerHTML = "&#10095;"; // Flecha apuntando a la derecha >
+                        btnExpandir.title = "Ver más detalles";
+                        // Devolvemos el scroll al principio para que no se quede glitcheado
+                        const cuerpoTabla = panel.querySelector('.tabla-cuerpo.cuerpo-reciente');
+                        if(cuerpoTabla) cuerpoTabla.scrollLeft = 0; 
+                    }
+                });
+            }
+        });
+        // ==========================================
+
         const tablerosContenedorGlobal = document.querySelector(".tableros-container");
         if(tablerosContenedorGlobal) {
             tablerosContenedorGlobal.addEventListener("click", (eventoClic) => this.handleTableClicks(eventoClic));

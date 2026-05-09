@@ -126,6 +126,9 @@
     .modo-gestor .tabla-header, .modo-gestor .operacion-row {
         grid-template-columns: 1.2fr 1fr 1.5fr 1.5fr 1fr 1.5fr !important;
     }
+    .modo-gestor .btn-expandir-tabla {
+        display: flex !important; 
+    }
 }
 
 @container panel-tabla (max-width: 650px) {
@@ -134,6 +137,9 @@
     .tabla-header, .operacion-row,
     .modo-gestor .tabla-header, .modo-gestor .operacion-row {
         grid-template-columns: 1.2fr 1fr 1.5fr 1fr 1.5fr !important;
+    }
+    .btn-expandir-tabla {
+        display: flex !important; 
     }
 }
 
@@ -163,3 +169,113 @@
         grid-template-columns: 1.2fr 1.5fr !important;
     }
 }
+
+/* =========================================
+    NUEVO BOTÓN EXPANDIR (Estilo Gemini)
+   ========================================= */
+
+.panel > div:first-child {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: var(--accent-blue);
+    padding: 10px 15px; 
+    border-radius: 8px 8px 0 0; 
+}
+
+.panel h2 {
+    margin: 0;
+    color: var(--btn-text, #ffffff);
+}
+
+.btn-expandir-tabla {
+    position: relative;
+    background: none;
+    border: none;
+    color: var(--btn-text, #ffffff);
+    width: 40px; 
+    height: 40px;
+    padding: 0;
+    cursor: pointer;
+    display: none; 
+    border-radius: 50%;
+    outline: none;
+    transition: all 0.2s ease-in-out;
+    justify-content: center;
+    align-items: center;
+}
+
+.btn-expandir-tabla::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background-color: rgba(255, 255, 255, 0); 
+    border-radius: 50%;
+    transform: scale(0.8); 
+    transition: background-color 0.2s ease, transform 0.2s ease-out; 
+    z-index: 1; 
+}
+
+.btn-expandir-tabla:hover::after {
+    background-color: rgba(255, 255, 255, 0.15); 
+    transform: scale(1);
+}
+
+.btn-expandir-tabla:active {
+    transform: scale(0.92); 
+}
+
+.btn-expandir-tabla:active::after {
+    background-color: rgba(255, 255, 255, 0.25); 
+}
+
+.icono-flecha {
+    width: 24px; 
+    height: 24px;
+    z-index: 2;
+    transition: transform 0.3s ease; 
+}
+
+/* =========================================
+    SISTEMA DE EXPANSIÓN MÓVIL
+   ========================================= */
+
+.panel.tabla-expandida .tabla-scroll-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    transform: translateZ(0); 
+    will-change: scroll-position;
+    padding-bottom: 5px;
+}
+
+.panel.tabla-expandida .icono-flecha {
+    transform: rotate(180deg); 
+}
+
+/* Todo el contenido, incluido el historial, se expande junto a 800px de forma segura */
+.panel.tabla-expandida .tabla-header,
+.panel.tabla-expandida .tabla-cuerpo, 
+.panel.tabla-expandida .toggle-historico,
+.panel.tabla-expandida .operacion-row {
+    min-width: 800px; 
+}
+
+.panel.tabla-expandida .acciones-gestor,
+.panel.tabla-expandida .tabla-header > span,
+.panel.tabla-expandida .operacion-row > span {
+    display: flex !important; 
+}
+
+.panel.tabla-expandida .tabla-header, 
+.panel.tabla-expandida .operacion-row {
+    grid-template-columns: 1.2fr 1fr 1.5fr 1.5fr 1fr 1.5fr !important;
+}
+
+.panel.modo-gestor.tabla-expandida .tabla-header, 
+.panel.modo-gestor.tabla-expandida .operacion-row {
+    grid-template-columns: 1.2fr 1fr 1.5fr 1.5fr 1fr 1.5fr 80px !important;
+}
+
+.tabla-scroll-wrapper::-webkit-scrollbar { height: 8px; }
+.tabla-scroll-wrapper::-webkit-scrollbar-track { background: var(--filter-bg); border-radius: 4px; }
+.tabla-scroll-wrapper::-webkit-scrollbar-thumb { background: var(--accent-blue); border-radius: 4px; }

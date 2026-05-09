@@ -44,29 +44,49 @@ export class LayoutView {
 
                 <section class="tableros-container">
                     <article class="panel" id="panel-salidas">
-                        <h2>🛫 Salidas</h2>
-                        <header class="tabla-header" id="header-salidas">
-                            <span>Fecha-Hora</span>
-                            <span>Código</span>
-                            <span>Destino</span>
-                            <span>Operador</span>
-                            <span>Puerta/Vía</span>
-                            <span>Estado</span>
-                        </header>
-                        <section id="lista-salidas"></section>
+                        <div style="display: flex; justify-content: space-between; align-items: center; background-color: var(--accent-blue);">
+                            <h2>🛫 Salidas</h2>
+                            <button class="btn-expandir-tabla" title="Ver más detalles">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="icono-flecha">
+                                    <polyline points="9 18 15 12 9 6"></polyline>
+                                </svg>
+                            </button>
+                        </div>
+                        
+                        <div class="tabla-scroll-wrapper">
+                            <header class="tabla-header" id="header-salidas">
+                                <span>Fecha-Hora</span>
+                                <span>Código</span>
+                                <span>Destino</span>
+                                <span>Operador</span>
+                                <span>Puerta/Vía</span>
+                                <span>Estado</span>
+                            </header>
+                            <section id="lista-salidas"></section>
+                        </div>
                     </article>
 
                     <article class="panel" id="panel-llegadas">
-                        <h2>🛬 Llegadas</h2>
-                        <header class="tabla-header" id="header-llegadas">
-                            <span>Fecha-Hora</span>
-                            <span>Código</span>
-                            <span>Origen</span>
-                            <span>Operador</span>
-                            <span>Puerta/Vía</span>
-                            <span>Estado</span>
-                        </header>
-                        <section id="lista-llegadas"></section>
+                        <div style="display: flex; justify-content: space-between; align-items: center; background-color: var(--accent-blue);">
+                            <h2>🛬 Llegadas</h2>
+                            <button class="btn-expandir-tabla" title="Ver más detalles">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="icono-flecha">
+                                    <polyline points="9 18 15 12 9 6"></polyline>
+                                </svg>
+                            </button>
+                        </div>
+
+                        <div class="tabla-scroll-wrapper">
+                            <header class="tabla-header" id="header-llegadas">
+                                <span>Fecha-Hora</span>
+                                <span>Código</span>
+                                <span>Origen</span>
+                                <span>Operador</span>
+                                <span>Puerta/Vía</span>
+                                <span>Estado</span>
+                            </header>
+                            <section id="lista-llegadas"></section>
+                        </div>
                     </article>
                 </section>
             </main>
