@@ -1,3 +1,6 @@
+/* TABLERO */
+
+
 /* =========================================
     ESTRUCTURA Y SCROLL DE LAS TABLAS
    ========================================= */
@@ -67,7 +70,8 @@
     GRILLA DE LAS TABLAS DEL TABLERO
    ========================================= */
 
-#panel-salidas, #panel-llegadas {
+/* ✨ Adiós IDs: Ahora todos los paneles escuchan a sí mismos para el responsive */
+.panel {
     container-type: inline-size;
     container-name: panel-tabla;
 }
@@ -252,7 +256,6 @@
     transform: rotate(180deg); 
 }
 
-/* Todo el contenido, incluido el historial, se expande junto a 800px de forma segura */
 .panel.tabla-expandida .tabla-header,
 .panel.tabla-expandida .tabla-cuerpo, 
 .panel.tabla-expandida .toggle-historico,

@@ -1,3 +1,5 @@
+/* COMPONENTES */
+
 /* =========================================
     COMPONENTES UI GLOBALES
    ========================================= */
@@ -66,38 +68,31 @@ input[type="text"], input[type="email"], input[type="password"], input[type="dat
 }
 
 /* =========================================
-    LISTAS INTERNAS DE MODALES (Usuarios, Operadores, Puntos)
+    LISTAS MODULARES GENÉRICAS 
    ========================================= */
 
-/* 1. Centramos el texto de las cabeceras de los modales */
-#modal-usuarios .tabla-header,
-#modal-operadores .tabla-header,
-#modal-puntos .tabla-header {
+.modal-content .tabla-header {
     display: grid;
-    text-align: center; /* Obliga al texto a ir al centro */
+    text-align: center; 
     padding: 10px;
 }
 
-#modal-usuarios .tabla-header > span,
-#modal-operadores .tabla-header > span,
-#modal-puntos .tabla-header > span {
+.modal-content .tabla-header > span {
     display: flex;
-    justify-content: center; /* Centra horizontalmente */
-    align-items: center;     /* Centra verticalmente */
+    justify-content: center; 
+    align-items: center;    
 }
 
-/* 2. Clase base para las filas de las listas */
 .modal-list-row {
     display: grid;
     padding: 10px;
     border-bottom: 1px solid var(--border-color);
-    align-items: center; /* Centra los elementos verticalmente (útil para los botones) */
+    align-items: center; 
 }
 
-/* 3. Centramos el texto de cada celda de la lista (excepto los botones) */
 .modal-list-row > span {
     display: flex;
-    justify-content: center; /* ¡Bingo! Texto centrado horizontalmente */
+    justify-content: center; 
     text-align: center;
 }
 
@@ -136,18 +131,14 @@ input[type="text"], input[type="email"], input[type="password"], input[type="dat
 }
 
 /* =========================================
-    RESPONSIVE MODALES (USUARIOS, OP, PUNTOS)
+    RESPONSIVE MODALES GENÉRICO
    ========================================= */
 @media (max-width: 600px) {
-    #modal-usuarios .tabla-header,
-    #modal-operadores .tabla-header,
-    #modal-puntos .tabla-header {
+    .modal-content .tabla-header {
         display: none !important;
     }
 
-    #lista-usuarios > *,
-    #lista-operadores > *,
-    #lista-puntos > * {
+    .modal-list-row {
         display: flex !important;
         flex-direction: column !important;
         align-items: flex-start !important;
@@ -159,17 +150,13 @@ input[type="text"], input[type="email"], input[type="password"], input[type="dat
         border-radius: 8px;
     }
 
-    #lista-usuarios > * > span,
-    #lista-operadores > * > span,
-    #lista-puntos > * > span {
+    .modal-list-row > span {
         width: 100%;
         font-size: 1rem;
         word-break: break-all;
     }
 
-    #lista-usuarios > * button,
-    #lista-operadores > * button,
-    #lista-puntos > * button {
+    .modal-list-row button {
         width: 100% !important;
         margin-top: 8px;
         padding: 12px;
@@ -182,17 +169,17 @@ input[type="text"], input[type="email"], input[type="password"], input[type="dat
         align-items: stretch;
     }
 
-    #form-add-operador,
-    #form-add-punto {
+    /* ✨ Adiós a los IDs: Ahora CUALQUIER formulario en un modal se adapta a móvil automáticamente */
+    .modal-content form {
+        display: flex !important;
         flex-direction: column !important;
     }
 
-    #form-add-operador input,
-    #form-add-operador button,
-    #form-add-punto input,
-    #form-add-punto select,
-    #form-add-punto button {
+    .modal-content form input,
+    .modal-content form select,
+    .modal-content form button {
         width: 100% !important;
         box-sizing: border-box;
+        margin-bottom: 10px;
     }
 }

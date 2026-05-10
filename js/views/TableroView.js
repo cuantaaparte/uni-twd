@@ -13,121 +13,58 @@ export class TableroView {
             esGestor ? panel.classList.add("modo-gestor") : panel.classList.remove("modo-gestor")
         );
 
+        this.#renderizarPanel(salidas, this.listaSalidas, "hist-salidas", operadores, puntos, esGestor);
+        this.#renderizarPanel(llegadas, this.listaLlegadas, "hist-llegadas", operadores, puntos, esGestor);
+    }
+
+    #renderizarPanel(operaciones, contenedor, idToggle, operadores, puntos, esGestor) {
         const limite24h = Date.now() - (24 * 60 * 60 * 1000);
+        const historicas = operaciones.filter(op => (new Date(Number(op.horaProgramada) || op.horaProgramada).getTime()) < limite24h);
+        const recientes = operaciones.filter(op => (new Date(Number(op.horaProgramada) || op.horaProgramada).getTime()) >= limite24h);
 
-        // 🛠️ TRUCO JS: Forzamos que la hora SIEMPRE sea un número
-        const obtenerTiempo = (hora) => new Date(Number(hora) || hora).getTime();
+        const estaAbierto = localStorage.getItem(`estado-${idToggle}`) === "true";
+        const iconoFlecha = estaAbierto ? "▲" : "▼";
 
-        const generarHTMLBloque = (operaciones) => {
-            return operaciones.map(op => {
-                const opEncontrado = operadores.find(o => o.operadorId === op.operadorId);
-                const ptEncontrado = puntos.find(p => p.puntoId === op.puntoId);
-                return this.generarFilaHTML(op, opEncontrado, ptEncontrado, esGestor);
-            }).join("");
-        };
+        let html = "";
+        
+        /* html */
+        html += `<div class="tabla-cuerpo cuerpo-reciente">${this.#generarBloqueFilas(recientes, operadores, puntos, esGestor)}</div>`;
+        
+        /* html */
+        html += `
+            <div class="toggle-historico" data-target="${idToggle}">
+                <span>${iconoFlecha}</span> 
+                <span style="font-size:0.85rem; font-weight:bold; letter-spacing:1px; text-transform:uppercase;">Historial (Hace más de 24h)</span> 
+                <span>${iconoFlecha}</span>
+            </div>`;
 
-        const renderizarPanel = (operaciones, contenedorTarget, idToggle) => {
-            const historicas = operaciones.filter(op => obtenerTiempo(op.horaProgramada) < limite24h);
-            const recientes = operaciones.filter(op => obtenerTiempo(op.horaProgramada) >= limite24h);
+        /* html */
+        html += `<div id="${idToggle}" class="${estaAbierto ? "" : "hidden"}">`;
+        if (historicas.length === 0) {
+            html += `<div style="padding: 15px; text-align: center; color: var(--text-muted, gray); font-style: italic; border-bottom: 2px solid var(--border-color);">Ninguna operación de hace más de 24h</div>`;
+        } else {
+            html += `<div class="tabla-cuerpo cuerpo-historico">${this.#generarBloqueFilas(historicas, operadores, puntos, esGestor)}</div>`;
+        }
+        html += `</div>`;
 
-            // 🔍 Recuperamos el estado guardado (abierto o cerrado tras F5)
-            const estaAbierto = localStorage.getItem(`estado-${idToggle}`) === "true";
-            const claseHidden = estaAbierto ? "" : "hidden";
-            const iconoFlecha = estaAbierto ? "▲" : "▼";
+        contenedor.innerHTML = html;
+    }
 
-            let html = "";
-            /* html */
-            // 1. Bloque Reciente (AHORA VA PRIMERO 🥇)
-            html += `<div class="tabla-cuerpo cuerpo-reciente">${generarHTMLBloque(recientes)}</div>`;
-
-            /* html */
-            // 2. Barra Desplegable Minimalista (EN MEDIO 🍔)
-            html += `<div class="toggle-historico" data-target="${idToggle}">
-                        <span>${iconoFlecha}</span> 
-                        <span style="font-size:0.85rem; font-weight:bold; letter-spacing:1px; text-transform:uppercase;">Historial (Hace más de 24h)</span> 
-                        <span>${iconoFlecha}</span>
-                    </div>`;
-
-            /* html */
-            // 3. Bloque Histórico (AHORA VA AL FINAL ⏬)
-            html += `<div id="${idToggle}" class="${claseHidden}">`;
-            if (historicas.length === 0) {
-                /* html */
-                html += `<div style="padding: 15px; text-align: center; color: var(--text-muted, gray); font-style: italic; border-bottom: 2px solid var(--border-color);">
-                            Ninguna operación de hace más de 24h
-                        </div>`;
-            } else {
-                /* html */
-                html += `<div class="tabla-cuerpo cuerpo-historico">${generarHTMLBloque(historicas)}</div>`;
-            }
-            html += `</div>`;
-
-            contenedorTarget.innerHTML = html;
-        };
-
-
-        renderizarPanel(salidas, this.listaSalidas, "hist-salidas");
-        renderizarPanel(llegadas, this.listaLlegadas, "hist-llegadas");
+    #generarBloqueFilas(operaciones, operadores, puntos, esGestor) {
+        return operaciones.map(op => {
+            const opEncontrado = operadores.find(o => o.operadorId === op.operadorId);
+            const ptEncontrado = puntos.find(p => p.puntoId === op.puntoId);
+            return this.generarFilaHTML(op, opEncontrado, ptEncontrado, esGestor);
+        }).join("");
     }
 
     generarFilaHTML(operacion, operador, punto, esGestor) {
-        const fechaOperacion = new Date(Number(operacion.horaProgramada) || operacion.horaProgramada);
-        
-        // Comprobar si la fecha es pasada
-        const timestampOperacion = fechaOperacion.getTime();
-        const esPasada = timestampOperacion < Date.now();
+        const { textoFechaHora, esPasada } = this.#formatearFechaRelativa(operacion.horaProgramada);
         const estiloColorFecha = esPasada ? "color: #ff4d4d; font-weight: bold;" : ""; 
+        const htmlIcono = this.#obtenerIconoOperador(operador);
         
-        // Tiempos relativos
-        const fechaHoy = new Date();
-        fechaHoy.setHours(0, 0, 0, 0);
-        
-        const fechaManana = new Date(fechaHoy);
-        fechaManana.setDate(fechaManana.getDate() + 1);
-
-        const fechaAyer = new Date(fechaHoy);
-        fechaAyer.setDate(fechaAyer.getDate() - 1);
-        
-        const diaOperacion = new Date(fechaOperacion);
-        diaOperacion.setHours(0, 0, 0, 0);
-
-        let textoFechaHora = "";
-        const formatoSoloHora = fechaOperacion.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-        const formatoSoloFecha = fechaOperacion.toLocaleDateString();
-
-        if (diaOperacion.getTime() === fechaHoy.getTime()) {
-            textoFechaHora = formatoSoloHora; 
-        } else if (diaOperacion.getTime() === fechaManana.getTime()) {
-            textoFechaHora = `M-${formatoSoloHora}`; 
-        } else if (diaOperacion.getTime() === fechaAyer.getTime()) {
-            textoFechaHora = `A-${formatoSoloHora}`; 
-        } else {
-            textoFechaHora = formatoSoloFecha; 
-        }
-
-        // Iconos y datos
-        const urlIcono = operador ? operador.urlIcono : "🟧";
-        const siglasOperador = operador ? operador.siglas : "N/A";
-        
-        const esImagen = urlIcono && (urlIcono.startsWith("http") || urlIcono.includes("/") || urlIcono.includes("."));
-
-        const htmlIcono = esImagen
-            ? `<img src="${urlIcono}" alt="${siglasOperador}" width="20" style="margin-right: 5px; vertical-align: middle;">`
-            : `<span style="font-size: 1.2rem; margin-right: 5px; vertical-align: middle;">${urlIcono}</span>`;
-
         const ciudadDestinoOrigen = operacion.sentido === "salida" ? operacion.destino : operacion.origen;
         const nombreOperador = operador ? operador.nombre : "Desconocido";
-
-        let htmlAccionesAdmin = "";
-        if (esGestor) {
-            /* html */
-            htmlAccionesAdmin = `
-                <nav class="acciones-gestor">
-                    <button class="btn-icon btn-editar" data-id="${operacion.operacionId}" title="Editar">✏️</button>
-                    <button class="btn-icon btn-borrar" data-id="${operacion.operacionId}" title="Borrar">🗑️</button>
-                </nav>
-            `;
-        }
 
         /* html */
         return `
@@ -135,14 +72,54 @@ export class TableroView {
                 <span style="${estiloColorFecha}">${textoFechaHora}</span>
                 <span style="font-weight: bold; color: var(--accent-blue, #0f3460);">${operacion.codigo}</span>
                 <span>${ciudadDestinoOrigen}</span>
-                <span class="operador-info">
-                    ${htmlIcono} 
-                    ${nombreOperador}
-                </span>
+                <span class="operador-info">${htmlIcono} ${nombreOperador}</span>
                 <span>${punto ? punto.codigo : "---"}</span>
                 <span class="estado-tag state-${operacion.estado.toLowerCase()}">${operacion.estado}</span>
-                ${htmlAccionesAdmin} 
+                ${this.#getAccionesGestor(esGestor, operacion.operacionId)} 
             </article>
+        `;
+    }
+
+    // --- MÉTODOS AUXILIARES PRIVADOS DE FORMATEO ---
+
+    #formatearFechaRelativa(horaMilisegundos) {
+        const fecha = new Date(Number(horaMilisegundos) || horaMilisegundos);
+        const esPasada = fecha.getTime() < Date.now();
+        
+        const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
+        const manana = new Date(hoy); manana.setDate(manana.getDate() + 1);
+        const ayer = new Date(hoy); ayer.setDate(ayer.getDate() - 1);
+        
+        const diaOp = new Date(fecha); diaOp.setHours(0, 0, 0, 0);
+
+        const horaTexto = fecha.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+        
+        let textoFinal = "";
+        if (diaOp.getTime() === hoy.getTime()) textoFinal = horaTexto; 
+        else if (diaOp.getTime() === manana.getTime()) textoFinal = `M-${horaTexto}`; 
+        else if (diaOp.getTime() === ayer.getTime()) textoFinal = `A-${horaTexto}`; 
+        else textoFinal = fecha.toLocaleDateString();
+
+        return { textoFechaHora: textoFinal, esPasada };
+    }
+
+    #obtenerIconoOperador(operador) {
+        const url = operador ? operador.urlIcono : "🟧";
+        const esImagen = url && (url.startsWith("http") || url.includes("/") || url.includes("."));
+        /* html */
+        return esImagen
+            ? `<img src="${url}" alt="${operador?.siglas || 'N/A'}" width="20" style="margin-right: 5px; vertical-align: middle;">`
+            : `<span style="font-size: 1.2rem; margin-right: 5px; vertical-align: middle;">${url}</span>`;
+    }
+
+    #getAccionesGestor(esGestor, opId) {
+        if (!esGestor) return "";
+        /* html */
+        return `
+            <nav class="acciones-gestor">
+                <button class="btn-icon btn-editar" data-id="${opId}" title="Editar">✏️</button>
+                <button class="btn-icon btn-borrar" data-id="${opId}" title="Borrar">🗑️</button>
+            </nav>
         `;
     }
 }

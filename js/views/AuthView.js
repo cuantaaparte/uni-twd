@@ -1,15 +1,12 @@
 export class AuthView {
     constructor() {
-        // 1º FABRICAMOS EL MODAL (¡Esto era lo que faltaba!)
         this.inyectarHTML();
 
-        // 2º Ahora ya podemos capturarlo sin que de error
         this.modal = document.getElementById("modal-auth");
         this.form = document.getElementById("auth-form");
         this.title = document.getElementById("modal-title");
         this.btnSubmit = document.getElementById("auth-submit");
         
-        // Elementos de la cabecera
         this.btnLogin = document.getElementById("btn-login");
         this.btnSignup = document.getElementById("btn-signup");
         this.btnLogout = document.getElementById("btn-logout");
@@ -21,7 +18,8 @@ export class AuthView {
     }
 
     inyectarHTML() {
-        if (document.getElementById("modal-auth")) return; // Evita duplicados
+        if (document.getElementById("modal-auth")) return; 
+        
         /* html */
         const html = `
         <aside id="modal-auth" class="modal-overlay hidden">
@@ -45,7 +43,7 @@ export class AuthView {
     }
 
     show(esRegistro = false) {
-        if(!this.modal) return;
+        if (!this.modal) return;
         this.modal.classList.remove("hidden");
         this.title.innerText = esRegistro ? "Crear Cuenta" : "Iniciar Sesión";
         this.btnSubmit.innerText = esRegistro ? "Registrarse" : "Entrar";
