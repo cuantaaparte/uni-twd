@@ -2,13 +2,12 @@ import { TableroView } from "../views/TableroView.js";
 import { normalizarIdColumna } from "../utils/helpers.js";
 
 export class TableroController {
-    constructor(tableroViewInstance = null, inputBusquedaOverride = null, selectEstadoOverride = null) {
+    constructor(tableroViewInstance = null, inputBusquedaOverride = null) {
         this.tableroView = tableroViewInstance || new TableroView();
         this.columnaActivaID = "FECHA-HORA"; 
         this.ordenAscendente = true;
         
         this.inputBusqueda = inputBusquedaOverride || document.getElementById("busqueda-codigo");
-        this.selectEstado = selectEstadoOverride || document.getElementById("filtro-estado");
 
         this.initListeners();
     }
@@ -23,13 +22,67 @@ export class TableroController {
             });
         }
 
-        if (this.selectEstado) {
-            const estadoGuardado = sessionStorage.getItem("memoriaEstado");
-            if (estadoGuardado) this.selectEstado.value = estadoGuardado;
-            this.selectEstado.addEventListener("change", (e) => {
-                sessionStorage.setItem("memoriaEstado", e.target.value);
-                this.aplicarFiltros();
+        // ✨ NUEVO: Lógica del Custom Multi-Select
+        const btnFiltro = document.getElementById("btn-filtro-estado");
+        const dropdownFiltro = document.getElementById("dropdown-filtro-estado");
+        const checkboxes = document.querySelectorAll(".chk-estado");
+
+        if (btnFiltro && dropdownFiltro) {
+            // 1. Abrir/Cerrar menú
+            btnFiltro.addEventListener("click", (e) => {
+                e.stopPropagation();
+                dropdownFiltro.classList.toggle("hidden");
             });
+
+            // 2. Cerrar al hacer clic fuera del filtro
+            document.addEventListener("click", (e) => {
+                if (!e.target.closest("#custom-filter-container")) {
+                    dropdownFiltro.classList.add("hidden");
+                }
+            });
+
+            // 3. Restaurar estado de memoria
+            let estadoGuardado = ["TODOS"];
+            try {
+                const memoria = sessionStorage.getItem("memoriaEstado");
+                if (memoria) estadoGuardado = JSON.parse(memoria);
+            } catch (e) {}
+
+            checkboxes.forEach(chk => {
+                chk.checked = estadoGuardado.includes(chk.value);
+                
+                // 4. Lógica de selección inteligente "TODOS" vs "RESTO"
+                chk.addEventListener("change", (e) => {
+                    if (e.target.value === "TODOS" && e.target.checked) {
+                        // Si marco TODOS, desmarco todo lo demás
+                        checkboxes.forEach(c => { if(c.value !== "TODOS") c.checked = false; });
+                    } else if (e.target.value !== "TODOS" && e.target.checked) {
+                        // Si marco un estado, desmarco la opción TODOS
+                        const chkTodos = document.querySelector('.chk-estado[value="TODOS"]');
+                        if (chkTodos) chkTodos.checked = false;
+                    }
+
+                    // Recuperar qué hemos marcado. Si desmarcamos todo, forzamos TODOS
+                    let seleccionados = Array.from(checkboxes).filter(c => c.checked).map(c => c.value);
+                    if (seleccionados.length === 0) {
+                        seleccionados = ["TODOS"];
+                        const chkTodos = document.querySelector('.chk-estado[value="TODOS"]');
+                        if(chkTodos) chkTodos.checked = true;
+                    }
+
+                    // Cambiar el texto del botón principal según lo seleccionado
+                    btnFiltro.innerText = seleccionados.includes("TODOS") 
+                        ? "Estados: Todos ▼" 
+                        : `Estados: ${seleccionados.length} selec. ▼`;
+
+                    sessionStorage.setItem("memoriaEstado", JSON.stringify(seleccionados));
+                    this.aplicarFiltros();
+                });
+            });
+
+            // Ajustar el texto del botón nada más cargar
+            const iniciales = Array.from(checkboxes).filter(c => c.checked).map(c => c.value);
+            btnFiltro.innerText = iniciales.includes("TODOS") ? "Estados: Todos ▼" : `Estados: ${iniciales.length} selec. ▼`;
         }
 
         document.querySelectorAll(".panel").forEach(panel => {
@@ -59,10 +112,19 @@ export class TableroController {
         const operadores = JSON.parse(localStorage.getItem("operadores")) || [];
         const puntos = JSON.parse(localStorage.getItem("puntos")) || [];
         
-        const busqueda = this.inputBusqueda.value.trim().toLowerCase();
-        const estado = this.selectEstado.value;
+        const busqueda = this.inputBusqueda ? this.inputBusqueda.value.trim().toLowerCase() : "";
+        
+        // Leemos las opciones seleccionadas directamente del HTML (Checkboxes)
+        const checkBoxes = document.querySelectorAll(".chk-estado:checked");
+        const estadosSeleccionados = checkBoxes.length ? Array.from(checkBoxes).map(c => c.value) : ["TODOS"];
+        const mostrarTodos = estadosSeleccionados.includes("TODOS");
 
-        const filtradas = operaciones.filter(op => op.codigo.toLowerCase().includes(busqueda) && (estado === "TODOS" || op.estado === estado));
+        const filtradas = operaciones.filter(op => {
+            const coincideBusqueda = op.codigo.toLowerCase().includes(busqueda);
+            // Si tiene TODOS marcado o el estado de la fila está en el array de seleccionados
+            const coincideEstado = mostrarTodos || estadosSeleccionados.includes(op.estado);
+            return coincideBusqueda && coincideEstado;
+        });
 
         const salidas = this.ordenarOperaciones(filtradas.filter(op => op.sentido === "salida"), operadores, puntos);
         const llegadas = this.ordenarOperaciones(filtradas.filter(op => op.sentido === "llegada"), operadores, puntos);
@@ -71,7 +133,6 @@ export class TableroController {
         this.renderizarInterfazAdministracion(usuarioActivo);
     }
 
-    // ✨ Refactor: Lógica de ordenación aislada
     ordenarOperaciones(lista, operadores, puntos) {
         return lista.sort((a, b) => {
             let vA, vB;
@@ -92,7 +153,6 @@ export class TableroController {
         });
     }
 
-    // ✨ Refactor: Router de clics más limpio
     handleTableClicks(e) {
         if (e.target.closest(".toggle-historico")) return this.toggleAcordeonHistorial(e.target.closest(".toggle-historico"));
         
@@ -103,7 +163,6 @@ export class TableroController {
         if (filaClicada && !e.target.closest(".acciones-gestor")) this.mostrarDetalleOperacion(filaClicada.getAttribute("data-id"));
     }
 
-    // --- Sub-métodos aislados ---
     toggleAcordeonHistorial(toggleBtn) {
         const targetId = toggleBtn.getAttribute("data-target");
         const targetDiv = document.getElementById(targetId);
@@ -135,9 +194,8 @@ export class TableroController {
 
         this.aplicarFiltros();
     }
-    // --- Fin Sub-métodos ---
 
-    mostrarDetalleOperacion(id) { /* ... (Sin cambios) ... */
+    mostrarDetalleOperacion(id) {
         const op = (JSON.parse(localStorage.getItem("operaciones")) || []).find(o => o.operacionId === id);
         if (!op) return;
 
@@ -145,8 +203,7 @@ export class TableroController {
         const punto = (JSON.parse(localStorage.getItem("puntos")) || []).find(p => p.puntoId === op.puntoId);
         
         document.getElementById("titulo-detalle").innerText = `${op.tipo.toLowerCase() === "tren" ? "🚂" : "✈️"} Detalles de la Operación`;
-        /* HTML*/
-        document.getElementById("detalle-contenido").innerHTML = `
+        document.getElementById("detalle-contenido").innerHTML =/*html*/ `
             <p>🏷️ <strong>Código:</strong> ${op.codigo}</p>
             <p>🚏 <strong>Tipo:</strong> ${op.tipo.toUpperCase()}</p>
             <p>🗺️ <strong>Trayecto:</strong> ${op.origen} ➡️ ${op.destino}</p>
@@ -161,7 +218,7 @@ export class TableroController {
         document.getElementById("modal-detalle")?.classList.remove("hidden");
     }
 
-    renderizarInterfazAdministracion(usuarioActual) { /* ... (Sin cambios) ... */
+    renderizarInterfazAdministracion(usuarioActual) {
         const contenedorAuth = document.querySelector(".auth-buttons");
         let infoUsuarioLogueado = document.getElementById("info-usuario-activo");
 

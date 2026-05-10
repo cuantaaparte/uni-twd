@@ -41,15 +41,20 @@ export class LayoutView {
         return `
         <section class="filtros" id="contenedor-filtros">
             <input type="text" id="busqueda-codigo" placeholder="Buscar por código (ej: IB123)...">
-            <select id="filtro-estado" aria-label="Filtrar por estado">
-                <option value="TODOS">Todos los estados</option>
-                <option value="PROGRAMADO">Programado</option>
-                <option value="RETRASADO">Retrasado</option>
-                <option value="CANCELADO">Cancelado</option>
-                <option value="EMBARCANDO">Embarcando</option>
-                <option value="EN_RUTA">En ruta</option>
-                <option value="LLEGADO">Llegado</option>
-            </select>
+            
+            <div class="custom-select" id="custom-filter-container">
+                <button type="button" class="select-btn" id="btn-filtro-estado">Estados: Todos ▼</button>
+                <div class="select-dropdown hidden" id="dropdown-filtro-estado">
+                    <label><input type="checkbox" class="chk-estado" value="TODOS" checked> Todos los estados</label>
+                    <label><input type="checkbox" class="chk-estado" value="PROGRAMADO"> Programado</label>
+                    <label><input type="checkbox" class="chk-estado" value="RETRASADO"> Retrasado</label>
+                    <label><input type="checkbox" class="chk-estado" value="CANCELADO"> Cancelado</label>
+                    <label><input type="checkbox" class="chk-estado" value="EMBARCANDO"> Embarcando</label>
+                    <label><input type="checkbox" class="chk-estado" value="EN_RUTA"> En ruta</label>
+                    <label><input type="checkbox" class="chk-estado" value="LLEGADO"> Llegado</label>
+                </div>
+            </div>
+
             <button id="btn-nueva-operacion" class="btn-primary hidden">➕ Nueva Operación</button>
             <button id="btn-gestionar-usuarios" class="btn-secondary hidden">👥 Usuarios</button>
             <button id="btn-gestionar-operadores" class="btn-secondary hidden">🏢 Operadores</button>

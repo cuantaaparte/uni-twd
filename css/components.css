@@ -131,6 +131,59 @@ input[type="text"], input[type="email"], input[type="password"], input[type="dat
 }
 
 /* =========================================
+    NUEVO: CUSTOM MULTI-SELECT
+   ========================================= */
+.custom-select {
+    position: relative;
+}
+
+.select-btn {
+    width: 100%;
+    height: 100%;
+    padding: 12px;
+    background-color: var(--input-bg);
+    border: 2px solid var(--input-border);
+    color: var(--text-main);
+    text-align: left;
+    border-radius: 6px;
+    font-weight: normal;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.select-dropdown {
+    position: absolute;
+    top: calc(100% + 5px);
+    left: 0;
+    right: 0;
+    background-color: var(--panel-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    box-shadow: 0 5px 15px var(--shadow-color);
+    z-index: 100;
+    max-height: 250px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+}
+
+.select-dropdown label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 5px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    border-radius: 4px;
+}
+
+.select-dropdown label:hover {
+    background-color: var(--row-hover-bg);
+}
+
+/* =========================================
     RESPONSIVE MODALES GENÉRICO
    ========================================= */
 @media (max-width: 600px) {
@@ -169,7 +222,6 @@ input[type="text"], input[type="email"], input[type="password"], input[type="dat
         align-items: stretch;
     }
 
-    /* ✨ Adiós a los IDs: Ahora CUALQUIER formulario en un modal se adapta a móvil automáticamente */
     .modal-content form {
         display: flex !important;
         flex-direction: column !important;

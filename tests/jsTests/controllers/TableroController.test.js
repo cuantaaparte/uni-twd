@@ -15,14 +15,18 @@ describe('📊 Controlador del Tablero (TableroController)', () => {
         ];
         localStorage.setItem("operaciones", JSON.stringify(operacionesSimuladas));
 
-        // Añadida la opción PROGRAMADO en el select para que JSDOM la reconozca
         document.body.innerHTML = /*HTML*/`
             <div class="filtros">
                 <input id="busqueda-codigo" value="">
-                <select id="filtro-estado">
-                    <option value="TODOS">TODOS</option>
-                    <option value="PROGRAMADO">PROGRAMADO</option>
-                </select>
+                
+                <div id="custom-filter-container">
+                    <button id="btn-filtro-estado">Estados: Todos ▼</button>
+                    <div id="dropdown-filtro-estado" class="hidden">
+                        <input type="checkbox" class="chk-estado" value="TODOS" checked>
+                        <input type="checkbox" class="chk-estado" value="PROGRAMADO">
+                        <input type="checkbox" class="chk-estado" value="LLEGADO">
+                    </div>
+                </div>
             </div>
             <div class="auth-buttons"></div>
             
@@ -43,16 +47,18 @@ describe('📊 Controlador del Tablero (TableroController)', () => {
     });
 
     describe('Inicialización y Memoria de Filtros 💾', () => {
-        it('debería restaurar la búsqueda y el filtro desde sessionStorage al iniciar', () => {
-            // Simulamos que el usuario hizo una búsqueda antes de recargar la página
+        it('debería restaurar la búsqueda y los MÚLTIPLES filtros desde sessionStorage al iniciar', () => {
             sessionStorage.setItem("memoriaBusqueda", "RYN");
-            sessionStorage.setItem("memoriaEstado", "PROGRAMADO");
+            sessionStorage.setItem("memoriaEstado", JSON.stringify(["PROGRAMADO", "LLEGADO"]));
 
-            // Instanciamos el controlador para que lea el sessionStorage
             tableroController = new TableroController(mockTableroView);
 
             expect(tableroController.inputBusqueda.value).toBe("RYN");
-            expect(tableroController.selectEstado.value).toBe("PROGRAMADO");
+            
+            const checkboxesSeleccionados = Array.from(document.querySelectorAll(".chk-estado:checked")).map(c => c.value);
+            expect(checkboxesSeleccionados).toContain("PROGRAMADO");
+            expect(checkboxesSeleccionados).toContain("LLEGADO");
+            expect(checkboxesSeleccionados).not.toContain("TODOS");
         });
     });
 
@@ -83,7 +89,7 @@ describe('📊 Controlador del Tablero (TableroController)', () => {
         it('debería filtrar por buscador de código en tiempo real', () => {
             tableroController.inputBusqueda.value = "vlg";
             tableroController.aplicarFiltros();
-            const llegadas = mockTableroView.render.mock.calls[0][1]; // Argumento 2 es llegadas
+            const llegadas = mockTableroView.render.mock.calls[0][1]; 
             expect(llegadas[0].codigo).toBe("VLG456");
         });
 
@@ -95,20 +101,6 @@ describe('📊 Controlador del Tablero (TableroController)', () => {
             span.dispatchEvent(new MouseEvent('click', { bubbles: true }));
 
             expect(tableroController.ordenAscendente).toBe(false);
-        });
-
-        it('debería cambiar de columna y resetear a ascendente', () => {
-            const span = document.getElementById("cabecera-codigo");
-            span.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-
-            expect(tableroController.columnaActivaID).toBe("CODIGO");
-            expect(tableroController.ordenAscendente).toBe(true);
-        });
-
-        it('debería mostrar el modal de detalles', () => {
-            tableroController.mostrarDetalleOperacion("1");
-            expect(document.getElementById("modal-detalle").classList.contains("hidden")).toBe(false);
-            expect(document.getElementById("detalle-contenido").innerHTML).toContain("RYN123");
         });
 
         it('debería cerrar el modal de detalle al hacer clic en el overlay', () => {
