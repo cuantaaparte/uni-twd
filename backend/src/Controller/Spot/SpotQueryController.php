@@ -1,12 +1,5 @@
 <?php
 
-/**
- * src/Controller/Spot/SpotQueryController.php
- *
- * @license https://opensource.org/licenses/MIT MIT License
- * @link    https://www.etsisi.upm.es/ ETS de Ingeniería de Sistemas Informáticos
- */
-
 namespace TDW\IPanel\Controller\Spot;
 
 use Doctrine\Common\Collections\Criteria;
@@ -14,120 +7,89 @@ use Doctrine\ORM\EntityManager;
 use Fig\Http\Message\StatusCodeInterface as StatusCode;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Slim\Http\Response;
-use Slim\Routing\RouteContext;
 use TDW\IPanel\Controller\TraitController;
 use TDW\IPanel\Model\Punto;
 use TDW\IPanel\Utility\Error;
 
-/**
- * Class SpotQueryController
- */
 class SpotQueryController
 {
     use TraitController;
 
     const string PATH_SPOTS = '/spots';
 
-    // constructor - receives the EntityManager from container instance
     public function __construct(
         protected readonly EntityManager $entityManager
     ) { }
 
-    /**
-     * Summary: Returns a collection of Spot resources.
-     * ...
-     */
     public function cget(Request $request, Response $response): Response
     {
-        // 1️⃣ Conectamos con el 'DAO' o Repositorio de la tabla Puntos
-        $repositorio = $this->entityManager->getRepository(Punto::class);
+        $puntos = $this->entityManager->getRepository(Punto::class)->findAll();
 
-        // 2️⃣ Traemos todos los registros de la base de datos (SELECT *)
-        $puntos = $repositorio->findAll();
+        if (empty($puntos)) {
+            return Error::createResponse($response, StatusCode::STATUS_NOT_FOUND);
+        }
 
-        // 3️⃣ Magia de Slim: Coge el array de objetos PHP, lo transforma a texto JSON 
-        // y lo envía al cliente con un código HTTP 200 (OK)
-        return $response->withJson(['puntos' => $puntos], StatusCode::STATUS_OK);
+        $etag = md5((string) json_encode(['puntos' => $puntos]));
+        if ($request->hasHeader('If-None-Match') && $request->getHeaderLine('If-None-Match') === $etag) {
+            return $response->withStatus(StatusCode::STATUS_NOT_MODIFIED);
+        }
+
+        return $response->withHeader('ETag', $etag)->withJson(['puntos' => $puntos], StatusCode::STATUS_OK);
     }
 
-    /**
-     * Summary: Returns a element based on a single id
-     *
-     * @param Request $request
-     * @param Response $response
-     * @param array<string, mixed> $args
-     *
-     * @return Response
-     */
     public function get(Request $request, Response $response, array $args): Response
     {
         assert(in_array($request->getMethod(), [ 'GET', 'HEAD' ], true));
-
-        // 1. Extraemos el ID que nos llega desde la URL (ej: /spots/5 -> $args['id'] será 5)
-        // La interrogación doble (??) es por si no viene el ID, poner un 0 por defecto.
         $puntoId = (int) ($args['spotId'] ?? 0);
-
-        // 2. Usamos el EntityManager (Doctrine) para buscar el Punto en la base de datos por su ID
-        /** @var Punto|null $punto */
         $punto = $this->entityManager->getRepository(Punto::class)->find($puntoId);
 
-        // 3. ¿Y si el punto no existe en la base de datos? Devolvemos un error 404 Not Found
         if ($punto === null) {
             return Error::createResponse($response, StatusCode::STATUS_NOT_FOUND);
         }
 
-        // 4. Si lo hemos encontrado, Slim nos hace la magia de convertir el objeto $punto 
-        // a formato JSON automáticamente y mandarlo con un código 200 (OK).
-        return $response->withJson($punto, StatusCode::STATUS_OK);
+        $etag = md5((string) json_encode(['punto' => $punto]));
+        if ($request->hasHeader('If-None-Match') && $request->getHeaderLine('If-None-Match') === $etag) {
+            return $response->withStatus(StatusCode::STATUS_NOT_MODIFIED);
+        }
+
+        return $response->withHeader('ETag', $etag)->withJson($punto, StatusCode::STATUS_OK);
     }
 
-    /**
-     * Summary: Returns status code 204 if _spotName_ exists
-     * Path: /spots/name/{name}
-     *
-     * @param Request $request
-     * @param Response $response
-     * @param array<string, mixed> $args
-     *
-     * @return Response 204 if _$args['spotName']_ exists, 404 otherwise
-     */
     public function getElementByName(Request $request, Response $response, array $args): Response
     {
         assert($request->getMethod() === 'GET');
 
-        return Error::createResponse($response, StatusCode::STATUS_NOT_IMPLEMENTED);
+        $name = $args['spotName'] ?? '';
+        $punto = $this->entityManager->getRepository(Punto::class)->findOneBy(['codigo' => $name]);
+
+        if ($punto === null) {
+            return Error::createResponse($response, StatusCode::STATUS_NOT_FOUND);
+        }
+
+        return $response->withStatus(StatusCode::STATUS_NO_CONTENT);
     }
 
-    /**
-     * Summary: Provides the list of HTTP supported methods
-     */
     public function options(Request $request, Response $response): Response
     {
         assert($request->getMethod() === 'OPTIONS');
 
-        return Error::createResponse($response, StatusCode::STATUS_NOT_IMPLEMENTED);
+        return $response
+            ->withHeader('Allow', 'OPTIONS, GET, HEAD, POST, PUT, DELETE')
+            ->withStatus(StatusCode::STATUS_NO_CONTENT);
     }
 
-    /**
-     * Builds a criteria based on the parameters received
-     *
-     * @param array<string, string> $params order | ordering | name
-     * @return Criteria
-     */
     private function buildCriteria(array $params): Criteria
     {
         $criteria = new Criteria();
-        $params['order'] = ($params['order'] ?? '' === 'id')
-            ? 'puntoId'
-            : null;
-        if (array_key_exists('order', $params)) { // Sorting criteria
+        $params['order'] = ($params['order'] ?? '' === 'id') ? 'puntoId' : null;
+        if (array_key_exists('order', $params)) { 
             $order = (in_array($params['order'], ['puntoId', 'codigo'], true)) ? $params['order'] : null;
         }
         if (array_key_exists('ordering', $params)) {
             $ordering = ('DESC' === $params['ordering']) ? 'DESC' : null;
         }
         $criteria->orderBy([$order ?? 'puntoId' => $ordering ?? 'ASC']);
-        if (array_key_exists('name', $params)) { // Search by name
+        if (array_key_exists('name', $params)) {
             $txtName = $params['name'];
             assert(preg_match('^[a-zA-Z0-9()áéíóúÁÉÍÓÚñÑ %$.+-]+$^', $txtName) !== false);
             $expressionBuilder = Criteria::expr();

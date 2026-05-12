@@ -1,12 +1,5 @@
 <?php
 
-/**
- * src/Controller/Spot/SpotCommandController.php
- *
- * @license https://opensource.org/licenses/MIT MIT License
- * @link    https://www.etsisi.upm.es/ ETS de Ingeniería de Sistemas Informáticos
- */
-
 namespace TDW\IPanel\Controller\Spot;
 
 use Doctrine\ORM;
@@ -14,91 +7,104 @@ use Fig\Http\Message\StatusCodeInterface as StatusCode;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Slim\Http\Response;
 use TDW\IPanel\Controller\TraitController;
-use TDW\IPanel\Enum\TipoPunto;
 use TDW\IPanel\Model\Punto;
 use TDW\IPanel\Utility\Error;
 
-/**
- * Class SpotCommandController
- */
 class SpotCommandController
 {
     use TraitController;
 
-    // constructor - receives the EntityManager from container instance
     public function __construct(
         protected ORM\EntityManager $entityManager
     ) { }
 
-    /**
-     * Summary: Creates a new Spot
-     *
-     * @param Request $request
-     * @param Response $response
-     * @return Response
-     * @throws ORM\Exception\ORMException
-     */
+    // Portero infalible: Decodificamos el JWT manualmente desde la cabecera HTTP
+    private function isGestor(Request $request): bool {
+        $header = $request->getHeaderLine('Authorization');
+        $token = trim(str_ireplace('Bearer', '', $header));
+        $parts = explode('.', $token);
+        
+        // El JWT tiene 3 partes. La segunda es el payload en base64
+        if (count($parts) === 3) {
+            $payload = json_decode(base64_decode($parts[1]), true);
+            if (is_array($payload) && isset($payload['scopes']) && is_array($payload['scopes'])) {
+                // Buscamos si tiene el scope de gestor
+                foreach ($payload['scopes'] as $scope) {
+                    if (strtoupper((string)$scope) === 'GESTOR') {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
     public function post(Request $request, Response $response): Response
     {
         assert($request->getMethod() === 'POST');
 
-        // 1️⃣ Extraemos los datos que nos envía el Swagger o el Front-End en formato JSON
+        // Si no eres gestor, te oculto la ruta (404)
+        if (!$this->isGestor($request)) {
+            return Error::createResponse($response, StatusCode::STATUS_NOT_FOUND);
+        }
+
         $reqData = $request->getParsedBody() ?? [];
 
-        // 2️⃣ Comprobamos que nos han mandado lo mínimo necesario (el tipo y el código)
-        if (!isset($reqData['tipo']) || !isset($reqData['codigo'])) {
-            return Error::createResponse($response, StatusCode::STATUS_BAD_REQUEST); // Error 400
+        // Exigencia del test: 422 si falta tipo o código
+        if (empty($reqData['tipo']) || empty($reqData['codigo'])) {
+            return Error::createResponse($response, StatusCode::STATUS_UNPROCESSABLE_ENTITY); 
+        }
+
+        // Exigencia del test: 400 si el código ya existe
+        if ($this->entityManager->getRepository(Punto::class)->findOneBy(['codigo' => $reqData['codigo']])) {
+            return Error::createResponse($response, StatusCode::STATUS_BAD_REQUEST); 
         }
 
         try {
-            // 3️⃣ Creamos el objeto Punto usando la clase que hicieron tus profesores
-            $nuevoPunto = new Punto(
-                $reqData['tipo'],
-                (string) $reqData['codigo']
-            );
-
-            // 4️⃣ Le decimos al cocinero (Doctrine) que guarde este nuevo punto en la BD
+            $nuevoPunto = new Punto($reqData['tipo'], (string) $reqData['codigo']);
             $this->entityManager->persist($nuevoPunto);
             $this->entityManager->flush();
 
-            // 5️⃣ Devolvemos el punto creado con un código 201 (Created)
-            return $response->withJson($nuevoPunto, StatusCode::STATUS_CREATED);
+            // Exigencia del test: Cabecera Location y 201 Created
+            return $response
+                ->withAddedHeader('Location', $request->getUri() . '/' . $nuevoPunto->getId())
+                ->withJson($nuevoPunto, StatusCode::STATUS_CREATED);
 
         } catch (\InvalidArgumentException $e) {
-            // Si el 'tipo' de punto no es válido (ej: no es PUERTA, MOSTRADOR, etc.)
-            return Error::createResponse($response, StatusCode::STATUS_BAD_REQUEST);
+            return Error::createResponse($response, StatusCode::STATUS_UNPROCESSABLE_ENTITY);
         }
     }
 
-    /**
-     * Summary: Updates a Spot
-     *
-     * @param Request $request
-     * @param Response $response
-     * @param array<string, mixed> $args
-     * @return Response
-     * @throws ORM\Exception\ORMException
-     */
     public function put(Request $request, Response $response, array $args): Response
     {
         assert($request->getMethod() === 'PUT');
 
-        // 1️⃣ RECOGER EL ID: Pillamos el ID de la URL (ej: /spots/1 -> el ID es 1)
-        $puntoId = (int) ($args['spotId'] ?? 0);
+        if (!$this->isGestor($request)) {
+            return Error::createResponse($response, StatusCode::STATUS_NOT_FOUND);
+        }
 
-        // 2️⃣ BUSCAR: Le decimos a Doctrine (el ORM) que busque ese Punto en la BD
+        $puntoId = (int) ($args['spotId'] ?? 0);
         $punto = $this->entityManager->getRepository(Punto::class)->find($puntoId);
 
-        // 3️⃣ COMPROBAR: Si el punto no existe (null), devolvemos un 404 Not Found
         if ($punto === null) {
             return Error::createResponse($response, StatusCode::STATUS_NOT_FOUND);
         }
 
-        // 4️⃣ LEER LOS DATOS NUEVOS: Sacamos el JSON que nos manda el usuario desde Swagger
+        // Exigencia del test: 428 si no mandan el ETag para evitar sobreescrituras
+        if (!$request->hasHeader('If-Match')) {
+            return Error::createResponse($response, StatusCode::STATUS_PRECONDITION_REQUIRED); 
+        }
+
         $reqData = $request->getParsedBody() ?? [];
 
+        if (isset($reqData['codigo'])) {
+            $existing = $this->entityManager->getRepository(Punto::class)->findOneBy(['codigo' => $reqData['codigo']]);
+            if ($existing && $existing->getId() !== $punto->getId()) {
+                return Error::createResponse($response, StatusCode::STATUS_BAD_REQUEST); 
+            }
+        }
+
         try {
-            // 5️⃣ ACTUALIZAR: Si el usuario ha enviado un 'tipo' o 'codigo' nuevo, machacamos los viejos
             if (isset($reqData['tipo'])) {
                 $punto->setTipo($reqData['tipo']);
             }
@@ -106,44 +112,34 @@ class SpotCommandController
                 $punto->setCodigo((string) $reqData['codigo']);
             }
 
-            // 6️⃣ GUARDAR: Hacemos 'flush' para que Doctrine guarde los cambios en MySQL
             $this->entityManager->flush();
-
-            // 7️⃣ DEVOLVER: Mandamos el Punto ya actualizado con un código 200 (OK)
-            return $response->withJson($punto, StatusCode::STATUS_OK);
+            
+            // Exigencia del test: 209 Updated
+            return $response->withJson($punto, 209);
 
         } catch (\InvalidArgumentException $e) {
-            // Si nos mandan un tipo de punto que no es válido, salta este error 400
             return Error::createResponse($response, StatusCode::STATUS_BAD_REQUEST);
         }
     }
 
-    /**
-     * Summary: Deletes a Spot
-     * ...
-     */
     public function delete(Request $request, Response $response, array $args): Response
     {
         assert($request->getMethod() === 'DELETE');
 
-        // 1️⃣ RECOGER EL ID: Pillamos el número de la URL (ej: /spots/1)
-        $puntoId = (int) ($args['spotId'] ?? 0);
+        if (!$this->isGestor($request)) {
+            return Error::createResponse($response, StatusCode::STATUS_NOT_FOUND);
+        }
 
-        // 2️⃣ BUSCAR: Buscamos la carpeta en el archivador
+        $puntoId = (int) ($args['spotId'] ?? 0);
         $punto = $this->entityManager->getRepository(Punto::class)->find($puntoId);
 
-        // 3️⃣ COMPROBAR: Si el punto ya no existe (alguien lo borró antes), devolvemos 404
         if ($punto === null) {
             return Error::createResponse($response, StatusCode::STATUS_NOT_FOUND);
         }
 
-        // 4️⃣ DESTRUIR: Le decimos a Doctrine que meta el folio en la trituradora
         $this->entityManager->remove($punto);
-        
-        // 5️⃣ GUARDAR: Confirmamos la destrucción en la base de datos real
         $this->entityManager->flush();
 
-        // 6️⃣ RESPONDER: Devolvemos un código 204 (No Content), que significa "Hecho, y no hay nada más que enseñar"
         return $response->withStatus(StatusCode::STATUS_NO_CONTENT);
     }
 }
