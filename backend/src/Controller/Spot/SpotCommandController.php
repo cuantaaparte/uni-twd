@@ -71,7 +71,7 @@ class SpotCommandController
     }
 
     /**
-     * Summary: Updates an element
+     * Summary: Updates a Spot
      *
      * @param Request $request
      * @param Response $response
@@ -83,22 +83,67 @@ class SpotCommandController
     {
         assert($request->getMethod() === 'PUT');
 
-        return Error::createResponse($response, StatusCode::STATUS_NOT_IMPLEMENTED);
+        // 1️⃣ RECOGER EL ID: Pillamos el ID de la URL (ej: /spots/1 -> el ID es 1)
+        $puntoId = (int) ($args['spotId'] ?? 0);
+
+        // 2️⃣ BUSCAR: Le decimos a Doctrine (el ORM) que busque ese Punto en la BD
+        $punto = $this->entityManager->getRepository(Punto::class)->find($puntoId);
+
+        // 3️⃣ COMPROBAR: Si el punto no existe (null), devolvemos un 404 Not Found
+        if ($punto === null) {
+            return Error::createResponse($response, StatusCode::STATUS_NOT_FOUND);
+        }
+
+        // 4️⃣ LEER LOS DATOS NUEVOS: Sacamos el JSON que nos manda el usuario desde Swagger
+        $reqData = $request->getParsedBody() ?? [];
+
+        try {
+            // 5️⃣ ACTUALIZAR: Si el usuario ha enviado un 'tipo' o 'codigo' nuevo, machacamos los viejos
+            if (isset($reqData['tipo'])) {
+                $punto->setTipo($reqData['tipo']);
+            }
+            if (isset($reqData['codigo'])) {
+                $punto->setCodigo((string) $reqData['codigo']);
+            }
+
+            // 6️⃣ GUARDAR: Hacemos 'flush' para que Doctrine guarde los cambios en MySQL
+            $this->entityManager->flush();
+
+            // 7️⃣ DEVOLVER: Mandamos el Punto ya actualizado con un código 200 (OK)
+            return $response->withJson($punto, StatusCode::STATUS_OK);
+
+        } catch (\InvalidArgumentException $e) {
+            // Si nos mandan un tipo de punto que no es válido, salta este error 400
+            return Error::createResponse($response, StatusCode::STATUS_BAD_REQUEST);
+        }
     }
 
     /**
-     * Summary: Remove an item
-     *
-     * @param Request $request
-     * @param Response $response
-     * @param array<string, mixed> $args
-     * @return Response
-     * @throws ORM\Exception\ORMException
+     * Summary: Deletes a Spot
+     * ...
      */
     public function delete(Request $request, Response $response, array $args): Response
     {
         assert($request->getMethod() === 'DELETE');
 
-        return Error::createResponse($response, StatusCode::STATUS_NOT_IMPLEMENTED);
+        // 1️⃣ RECOGER EL ID: Pillamos el número de la URL (ej: /spots/1)
+        $puntoId = (int) ($args['spotId'] ?? 0);
+
+        // 2️⃣ BUSCAR: Buscamos la carpeta en el archivador
+        $punto = $this->entityManager->getRepository(Punto::class)->find($puntoId);
+
+        // 3️⃣ COMPROBAR: Si el punto ya no existe (alguien lo borró antes), devolvemos 404
+        if ($punto === null) {
+            return Error::createResponse($response, StatusCode::STATUS_NOT_FOUND);
+        }
+
+        // 4️⃣ DESTRUIR: Le decimos a Doctrine que meta el folio en la trituradora
+        $this->entityManager->remove($punto);
+        
+        // 5️⃣ GUARDAR: Confirmamos la destrucción en la base de datos real
+        $this->entityManager->flush();
+
+        // 6️⃣ RESPONDER: Devolvemos un código 204 (No Content), que significa "Hecho, y no hay nada más que enseñar"
+        return $response->withStatus(StatusCode::STATUS_NO_CONTENT);
     }
 }
