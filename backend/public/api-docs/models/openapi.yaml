@@ -25,6 +25,8 @@ tags:
     description: Operator management
   - name: '🎯 Spots'
     description: Spot management
+  - name: '✈️ Operations'
+    description: Operation management
 
 paths:
   '/access_token':
@@ -593,6 +595,95 @@ paths:
         '404':
           $ref: '#/components/responses/Response_404'
 
+  /operations:
+    get:
+      tags:
+        - '✈️ Operations'
+      summary: Retrieves the collection of Operation resources.
+      operationId: api_operation_cget
+      responses:
+        '200':
+          description: Object containing an array of Operations
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  operaciones:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Operation'
+        '404':
+          $ref: '#/components/responses/Response_404'
+    post:
+      tags:
+        - '✈️ Operations'
+      summary: Creates an Operation.
+      operationId: createOperation
+      security:
+        - MiWApiSecurity: [ gestor ]
+      requestBody:
+        $ref: '#/components/requestBodies/OperationRequestBody'
+      responses:
+        '201':
+          description: '`CREATED`: Operation created'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Operation'
+        '400':
+          $ref: '#/components/responses/Response_400'
+        '401':
+          $ref: '#/components/responses/Response_401'
+
+  '/operations/{operationId}':
+    parameters:
+      - $ref: '#/components/parameters/operationId'
+    get:
+      tags:
+        - '✈️ Operations'
+      summary: Retrieves an Operation based on a single ID.
+      operationId: readOperation
+      responses:
+        '200':
+          description: Operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Operation'
+        '404':
+          $ref: '#/components/responses/Response_404'
+    put:
+      tags:
+        - '✈️ Operations'
+      summary: Updates the Operation.
+      operationId: updateOperation
+      security:
+        - MiWApiSecurity: [ gestor ]
+      requestBody:
+        $ref: '#/components/requestBodies/OperationRequestBody'
+      responses:
+        '200':
+          description: '`OK`: Operation updated'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Operation'
+        '400':
+          $ref: '#/components/responses/Response_400'
+    delete:
+      tags:
+        - '✈️ Operations'
+      summary: Removes the Operation.
+      operationId: deleteOperation
+      security:
+        - MiWApiSecurity: [ gestor ]
+      responses:
+        '204':
+          description: '`NO CONTENT`: Operation deleted'
+        '404':
+          $ref: '#/components/responses/Response_404'
+
 components:
   schemas:
     User:
@@ -715,6 +806,37 @@ components:
           PuntoId: 2023
           tipo: "PUERTA"
           codigo: "P2023"
+    Operation:
+      type: object
+      properties:
+        operacionId:
+          type: string
+          readOnly: true
+        tipo:
+          type: string
+          enum: [ vuelo, tren ]
+        codigo:
+          type: string
+        sentido:
+          type: string
+          enum: [ salida, llegada ]
+        origen:
+          type: string
+        destino:
+          type: string
+        estado:
+          type: string
+          enum: [ programado, embarcando, retrasado, cancelado, 'en ruta', llegado ]
+        horaProgramada:
+          type: string
+          format: date-time
+        horaEstimada:
+          type: string
+          format: date-time
+        operador:
+          $ref: '#/components/schemas/Operator'
+        punto:
+          $ref: '#/components/schemas/Spot'
 
     Message:
       type: object
@@ -922,6 +1044,36 @@ components:
                 type: string
                 maxLength: 6
             required: [ 'codigo', 'tipo' ]
+    OperationRequestBody:
+      description: '`Operation` data'
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              tipo:
+                type: string
+              codigo:
+                type: string
+              sentido:
+                type: string
+              origen:
+                type: string
+              destino:
+                type: string
+              estado:
+                type: string
+              horaProgramada:
+                type: string
+                format: date-time
+              horaEstimada:
+                type: string
+                format: date-time
+              operadorId:
+                type: integer
+              puntoId:
+                type: integer
+            required: [ 'tipo', 'codigo', 'sentido', 'origen', 'destino', 'operadorId', 'puntoId' ]
 
   parameters:
     userId:
@@ -1030,6 +1182,14 @@ components:
       schema:
         type: string
         pattern: '^[a-zA-Z0-9()áéíóúÁÉÍÓÚñÑ %$\.+-]*$'
+    operationId:
+      name: operationId
+      in: path
+      description: Operation ID (ULID format)
+      required: true
+      schema:
+        type: string
+        pattern: '^[0-9A-Za-z]+$'
 
   headers:
     Authorization:
