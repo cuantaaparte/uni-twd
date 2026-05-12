@@ -58,7 +58,22 @@ class SpotQueryController
     {
         assert(in_array($request->getMethod(), [ 'GET', 'HEAD' ], true));
 
-        return Error::createResponse($response, StatusCode::STATUS_NOT_IMPLEMENTED);
+        // 1. Extraemos el ID que nos llega desde la URL (ej: /spots/5 -> $args['id'] será 5)
+        // La interrogación doble (??) es por si no viene el ID, poner un 0 por defecto.
+        $puntoId = (int) ($args['spotId'] ?? 0);
+
+        // 2. Usamos el EntityManager (Doctrine) para buscar el Punto en la base de datos por su ID
+        /** @var Punto|null $punto */
+        $punto = $this->entityManager->getRepository(Punto::class)->find($puntoId);
+
+        // 3. ¿Y si el punto no existe en la base de datos? Devolvemos un error 404 Not Found
+        if ($punto === null) {
+            return Error::createResponse($response, StatusCode::STATUS_NOT_FOUND);
+        }
+
+        // 4. Si lo hemos encontrado, Slim nos hace la magia de convertir el objeto $punto 
+        // a formato JSON automáticamente y mandarlo con un código 200 (OK).
+        return $response->withJson($punto, StatusCode::STATUS_OK);
     }
 
     /**
