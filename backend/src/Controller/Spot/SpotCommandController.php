@@ -42,7 +42,32 @@ class SpotCommandController
     {
         assert($request->getMethod() === 'POST');
 
-        return Error::createResponse($response, StatusCode::STATUS_NOT_IMPLEMENTED);
+        // 1️⃣ Extraemos los datos que nos envía el Swagger o el Front-End en formato JSON
+        $reqData = $request->getParsedBody() ?? [];
+
+        // 2️⃣ Comprobamos que nos han mandado lo mínimo necesario (el tipo y el código)
+        if (!isset($reqData['tipo']) || !isset($reqData['codigo'])) {
+            return Error::createResponse($response, StatusCode::STATUS_BAD_REQUEST); // Error 400
+        }
+
+        try {
+            // 3️⃣ Creamos el objeto Punto usando la clase que hicieron tus profesores
+            $nuevoPunto = new Punto(
+                $reqData['tipo'],
+                (string) $reqData['codigo']
+            );
+
+            // 4️⃣ Le decimos al cocinero (Doctrine) que guarde este nuevo punto en la BD
+            $this->entityManager->persist($nuevoPunto);
+            $this->entityManager->flush();
+
+            // 5️⃣ Devolvemos el punto creado con un código 201 (Created)
+            return $response->withJson($nuevoPunto, StatusCode::STATUS_CREATED);
+
+        } catch (\InvalidArgumentException $e) {
+            // Si el 'tipo' de punto no es válido (ej: no es PUERTA, MOSTRADOR, etc.)
+            return Error::createResponse($response, StatusCode::STATUS_BAD_REQUEST);
+        }
     }
 
     /**

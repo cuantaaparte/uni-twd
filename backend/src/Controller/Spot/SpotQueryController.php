@@ -34,15 +34,20 @@ class SpotQueryController
     ) { }
 
     /**
-     * Summary: Returns all elements
-     *
-     * @todo add pagination
+     * Summary: Returns a collection of Spot resources.
+     * ...
      */
     public function cget(Request $request, Response $response): Response
     {
-        assert(in_array($request->getMethod(), [ 'GET', 'HEAD' ], true));
+        // 1️⃣ Conectamos con el 'DAO' o Repositorio de la tabla Puntos
+        $repositorio = $this->entityManager->getRepository(Punto::class);
 
-        return Error::createResponse($response, StatusCode::STATUS_NOT_IMPLEMENTED);
+        // 2️⃣ Traemos todos los registros de la base de datos (SELECT *)
+        $puntos = $repositorio->findAll();
+
+        // 3️⃣ Magia de Slim: Coge el array de objetos PHP, lo transforma a texto JSON 
+        // y lo envía al cliente con un código HTTP 200 (OK)
+        return $response->withJson(['puntos' => $puntos], StatusCode::STATUS_OK);
     }
 
     /**
