@@ -58,11 +58,37 @@ export class AuthView {
     renderAuthButtons(usuarioLogueado) {
         const botonesGestor = [this.btnNuevaOp, this.btnAdminUsuarios, this.btnAdminOperadores, this.btnAdminPuntos];
 
+        // Buscamos si ya existe la "píldora" del usuario en el DOM
+        let userBadge = document.getElementById("user-badge");
+
         if (usuarioLogueado) {
             this.btnLogin?.classList.add("hidden");
             this.btnSignup?.classList.add("hidden");
             this.btnLogout?.classList.remove("hidden");
             
+            // --- 🎨 NUEVO: CREAR Y MOSTRAR LA PÍLDORA DEL USUARIO ---
+            if (!userBadge) {
+                userBadge = document.createElement("div");
+                userBadge.id = "user-badge";
+                // Le metemos los estilos para que quede exactamente como en tu captura
+                userBadge.style.cssText = "display: inline-flex; align-items: center; gap: 8px; margin-right: 15px; background: var(--panel-bg, #2a2d3e); padding: 5px 12px; border-radius: 20px; border: 1px solid var(--border-color, #444); color: #fff;";
+                
+                // Lo insertamos justo antes del botón de Cerrar Sesión
+                this.btnLogout.parentNode.insertBefore(userBadge, this.btnLogout);
+            }
+            
+            // Recortamos el email para coger solo el nombre (ej: admin@etsisi.upm.es -> admin)
+            const nombreCorto = usuarioLogueado.email.split('@')[0];
+            // Color dinámico: Verde para GESTOR, Azul para PÚBLICO
+            const colorRol = usuarioLogueado.rol === "GESTOR" ? "#2ecc71" : "#3498db"; 
+            
+            userBadge.innerHTML = `
+                <span style="font-size: 0.95rem;">🧑‍💼 ${nombreCorto}</span>
+                <span style="background: ${colorRol}; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: bold; letter-spacing: 0.5px;">${usuarioLogueado.rol}</span>
+            `;
+            userBadge.classList.remove("hidden");
+            // --------------------------------------------------------
+
             if (usuarioLogueado.rol === "GESTOR") {
                 botonesGestor.forEach(btn => btn?.classList.remove("hidden"));
             } else {
@@ -73,6 +99,9 @@ export class AuthView {
             this.btnSignup?.classList.remove("hidden");
             this.btnLogout?.classList.add("hidden");
             botonesGestor.forEach(btn => btn?.classList.add("hidden"));
+            
+            // Si cierra sesión, escondemos la píldora
+            if (userBadge) userBadge.classList.add("hidden");
         }
     }
 }

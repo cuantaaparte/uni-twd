@@ -1,4 +1,4 @@
-import { inicializarDatos } from "./data/seed.js";
+//import { inicializarDatos } from "./data/seed.js";
 // 📦 1. Importamos las nuevas vistas generadoras de HTML
 import { LayoutView } from "./views/LayoutView.js";
 import { AdminModalsView } from "./views/AdminModalsView.js";
@@ -14,7 +14,7 @@ document.addEventListener("DOMContentLoaded", () => {
     console.log("✈️ Sistema Iniciado - Arquitectura MVC Modular Full JS");
     
     // 1. Cargar Base de Datos Semilla
-    inicializarDatos();
+    //inicializarDatos();
 
     // 🏗️ 2. CONSTRUIR EL DOM (¡Fundamental que vaya aquí!)
     // Generamos el HTML base y los modales antes de que los controladores los busquen
@@ -27,9 +27,9 @@ document.addEventListener("DOMContentLoaded", () => {
     // 📊 4. Iniciar el Tablero Principal (El corazón de la app)
     const tableroController = new TableroController();
 
-    // 🔐 5. Iniciar Controladores secundarios pasándoles la función para repintar la tabla
-    const authController = new AuthController(() => tableroController.aplicarFiltros());
-    const adminController = new AdminController(() => tableroController.aplicarFiltros());
+    // 🔐 5. Iniciar Controladores secundarios pasándoles la función para descargar los nuevos datos
+    const authController = new AuthController(() => tableroController.cargarDatosDelServidor());
+    const adminController = new AdminController(() => tableroController.cargarDatosDelServidor());
 
     // 🚀 6. Arrancar la máquina
     tableroController.aplicarFiltros();

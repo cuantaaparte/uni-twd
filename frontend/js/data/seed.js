@@ -1,7 +1,7 @@
 // importamos datos de prueba!!!
 
 // primero lo k usaremos
-import { Usuario, ROLES_USUARIO } from "../models/Usuario.js";
+//import { Usuario, ROLES_USUARIO } from "../models/Usuario.js";
 import { Operador } from "../models/Operador.js";
 import { Punto, TIPOS_PUNTO } from "../models/Punto.js";
 import { Operacion, SENTIDOS, TIPOS_OPERACION } from "../models/Operacion.js";
@@ -17,6 +17,7 @@ export function inicializarDatos(){
     console.log("generando datos enriquecidos...");
 
     // 👤 USUARIOS (Gestores y Público)
+    /*
     const usuarios = [
         new Usuario("admin@aerogestor.com", "admin", ROLES_USUARIO.GESTOR),
         new Usuario("admin@admin.com", "admin", ROLES_USUARIO.GESTOR), // Nuevo Admin
@@ -25,7 +26,7 @@ export function inicializarDatos(){
         new Usuario("user2@gmail.com", "user2", ROLES_USUARIO.PUBLICO),
         new Usuario("user3@gmail.com", "user3", ROLES_USUARIO.PUBLICO),
         new Usuario("user4@gmail.com", "user4", ROLES_USUARIO.PUBLICO)
-    ];
+    ];*/
 
     // 🏢 OPERADORES (Vuelos y Trenes con imágenes camelCase)
     const operadores = [

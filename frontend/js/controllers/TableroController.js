@@ -1,5 +1,6 @@
 import { TableroView } from "../views/TableroView.js";
 import { normalizarIdColumna } from "../utils/helpers.js";
+import { ApiService } from "../data/ApiService.js"; 
 
 export class TableroController {
     constructor(tableroViewInstance = null, inputBusquedaOverride = null) {
@@ -22,26 +23,22 @@ export class TableroController {
             });
         }
 
-        // ✨ NUEVO: Lógica del Custom Multi-Select
         const btnFiltro = document.getElementById("btn-filtro-estado");
         const dropdownFiltro = document.getElementById("dropdown-filtro-estado");
         const checkboxes = document.querySelectorAll(".chk-estado");
 
         if (btnFiltro && dropdownFiltro) {
-            // 1. Abrir/Cerrar menú
             btnFiltro.addEventListener("click", (e) => {
                 e.stopPropagation();
                 dropdownFiltro.classList.toggle("hidden");
             });
 
-            // 2. Cerrar al hacer clic fuera del filtro
             document.addEventListener("click", (e) => {
                 if (!e.target.closest("#custom-filter-container")) {
                     dropdownFiltro.classList.add("hidden");
                 }
             });
 
-            // 3. Restaurar estado de memoria
             let estadoGuardado = ["TODOS"];
             try {
                 const memoria = sessionStorage.getItem("memoriaEstado");
@@ -51,18 +48,14 @@ export class TableroController {
             checkboxes.forEach(chk => {
                 chk.checked = estadoGuardado.includes(chk.value);
                 
-                // 4. Lógica de selección inteligente "TODOS" vs "RESTO"
                 chk.addEventListener("change", (e) => {
                     if (e.target.value === "TODOS" && e.target.checked) {
-                        // Si marco TODOS, desmarco todo lo demás
                         checkboxes.forEach(c => { if(c.value !== "TODOS") c.checked = false; });
                     } else if (e.target.value !== "TODOS" && e.target.checked) {
-                        // Si marco un estado, desmarco la opción TODOS
                         const chkTodos = document.querySelector('.chk-estado[value="TODOS"]');
                         if (chkTodos) chkTodos.checked = false;
                     }
 
-                    // Recuperar qué hemos marcado. Si desmarcamos todo, forzamos TODOS
                     let seleccionados = Array.from(checkboxes).filter(c => c.checked).map(c => c.value);
                     if (seleccionados.length === 0) {
                         seleccionados = ["TODOS"];
@@ -70,7 +63,6 @@ export class TableroController {
                         if(chkTodos) chkTodos.checked = true;
                     }
 
-                    // Cambiar el texto del botón principal según lo seleccionado
                     btnFiltro.innerText = seleccionados.includes("TODOS") 
                         ? "Estados: Todos ▼" 
                         : `Estados: ${seleccionados.length} selec. ▼`;
@@ -80,7 +72,6 @@ export class TableroController {
                 });
             });
 
-            // Ajustar el texto del botón nada más cargar
             const iniciales = Array.from(checkboxes).filter(c => c.checked).map(c => c.value);
             btnFiltro.innerText = iniciales.includes("TODOS") ? "Estados: Todos ▼" : `Estados: ${iniciales.length} selec. ▼`;
         }
@@ -106,28 +97,65 @@ export class TableroController {
         modalDetalle?.addEventListener("click", (e) => { if (e.target.id === "modal-detalle") modalDetalle.classList.add("hidden"); });
     }
 
+    async cargarDatosDelServidor() {
+        try {
+            const [dataOperaciones, dataOperadores, dataPuntos] = await Promise.all([
+                ApiService.getOperaciones(),
+                ApiService.getOperadores(),
+                ApiService.getPuntos()
+            ]);
+
+            this.datosMemoria = {
+                operaciones: dataOperaciones,
+                operadores: dataOperadores,
+                puntos: dataPuntos
+            };
+
+            this.aplicarFiltros();
+
+        } catch (error) {
+            console.error("🔥 Error crítico cargando el tablero:", error);
+            const msgError = `<div style="padding: 20px; color: #ff4d4d; text-align: center; font-weight: bold;">❌ Error de conexión: ${error.message}</div>`;
+            document.getElementById("lista-salidas").innerHTML = msgError;
+            document.getElementById("lista-llegadas").innerHTML = msgError;
+        }
+    }
+
     aplicarFiltros() {
-        const usuarioActivo = JSON.parse(sessionStorage.getItem("usuarioActivo"));
-        const operaciones = JSON.parse(localStorage.getItem("operaciones")) || [];
-        const operadores = JSON.parse(localStorage.getItem("operadores")) || [];
-        const puntos = JSON.parse(localStorage.getItem("puntos")) || [];
+        if (!this.datosMemoria) {
+            this.cargarDatosDelServidor();
+            return;
+        }
+
+        const { operaciones, operadores, puntos } = this.datosMemoria;
+        const usuarioActivo = JSON.parse(sessionStorage.getItem("usuarioActivo")); 
         
         const busqueda = this.inputBusqueda ? this.inputBusqueda.value.trim().toLowerCase() : "";
         
-        // Leemos las opciones seleccionadas directamente del HTML (Checkboxes)
         const checkBoxes = document.querySelectorAll(".chk-estado:checked");
         const estadosSeleccionados = checkBoxes.length ? Array.from(checkBoxes).map(c => c.value) : ["TODOS"];
         const mostrarTodos = estadosSeleccionados.includes("TODOS");
 
         const filtradas = operaciones.filter(op => {
-            const coincideBusqueda = op.codigo.toLowerCase().includes(busqueda);
-            // Si tiene TODOS marcado o el estado de la fila está en el array de seleccionados
-            const coincideEstado = mostrarTodos || estadosSeleccionados.includes(op.estado);
+            const opReal = op.operacion || op.operation || op; // 🕵️‍♂️ TRADUCTOR AÑADIDO
+            const codigo = (opReal.codigo || opReal.code || "").toLowerCase();
+            const estado = (opReal.estado || opReal.status || "").toUpperCase();
+
+            const coincideBusqueda = codigo.includes(busqueda);
+            const coincideEstado = mostrarTodos || estadosSeleccionados.includes(estado);
+            
             return coincideBusqueda && coincideEstado;
         });
 
-        const salidas = this.ordenarOperaciones(filtradas.filter(op => op.sentido === "salida"), operadores, puntos);
-        const llegadas = this.ordenarOperaciones(filtradas.filter(op => op.sentido === "llegada"), operadores, puntos);
+        const salidas = this.ordenarOperaciones(filtradas.filter(op => {
+            const opReal = op.operacion || op.operation || op; // 🕵️‍♂️ TRADUCTOR AÑADIDO
+            return (opReal.sentido || opReal.direction || "").toLowerCase() === "salida";
+        }), operadores, puntos);
+        
+        const llegadas = this.ordenarOperaciones(filtradas.filter(op => {
+            const opReal = op.operacion || op.operation || op; // 🕵️‍♂️ TRADUCTOR AÑADIDO
+            return (opReal.sentido || opReal.direction || "").toLowerCase() === "llegada";
+        }), operadores, puntos);
 
         this.tableroView.render(salidas, llegadas, operadores, puntos, usuarioActivo);
         this.renderizarInterfazAdministracion(usuarioActivo);
@@ -135,16 +163,48 @@ export class TableroController {
 
     ordenarOperaciones(lista, operadores, puntos) {
         return lista.sort((a, b) => {
+            const aReal = a.operacion || a.operation || a; 
+            const bReal = b.operacion || b.operation || b; 
+
             let vA, vB;
             switch (normalizarIdColumna(this.columnaActivaID)) {
                 case "FECHA-HORA":
-                case "HORA": vA = new Date(Number(a.horaProgramada) || a.horaProgramada).getTime(); vB = new Date(Number(b.horaProgramada) || b.horaProgramada).getTime(); break;
-                case "CODIGO": vA = a.codigo.toLowerCase(); vB = b.codigo.toLowerCase(); break;
+                case "HORA": 
+                    vA = new Date(aReal.horaProgramada || aReal.scheduled_time || 0).getTime(); 
+                    vB = new Date(bReal.horaProgramada || bReal.scheduled_time || 0).getTime(); 
+                    break;
+                case "CODIGO": 
+                    vA = (aReal.codigo || aReal.code || "").toLowerCase(); 
+                    vB = (bReal.codigo || bReal.code || "").toLowerCase(); 
+                    break;
                 case "DESTINO":
-                case "ORIGEN": vA = (a.sentido === "salida" ? a.destino : a.origen).toLowerCase(); vB = (b.sentido === "salida" ? b.destino : b.origen).toLowerCase(); break;
-                case "OPERADOR": vA = (operadores.find(o => o.operadorId === a.operadorId)?.nombre || "").toLowerCase(); vB = (operadores.find(o => o.operadorId === b.operadorId)?.nombre || "").toLowerCase(); break;
-                case "PUERTA/VIA": vA = (puntos.find(p => p.puntoId === a.puntoId)?.codigo || "").toLowerCase(); vB = (puntos.find(p => p.puntoId === b.puntoId)?.codigo || "").toLowerCase(); break;
-                case "ESTADO": vA = a.estado.toLowerCase(); vB = b.estado.toLowerCase(); break;
+                case "ORIGEN": 
+                    const sentidoA = aReal.sentido || aReal.direction;
+                    const sentidoB = bReal.sentido || bReal.direction;
+                    vA = (sentidoA === "salida" ? (aReal.destino || aReal.destination) : (aReal.origen || aReal.origin) || "").toLowerCase(); 
+                    vB = (sentidoB === "salida" ? (bReal.destino || bReal.destination) : (bReal.origen || bReal.origin) || "").toLowerCase(); 
+                    break;
+                case "OPERADOR": 
+                    // 🕵️‍♂️ TRADUCTOR ANIDADO (Busca si el operador viene como ID suelta o como objeto {id: 1})
+                    const idOpA = aReal.operadorId || aReal.operator_id || aReal.operador?.id || aReal.operator?.id;
+                    const idOpB = bReal.operadorId || bReal.operator_id || bReal.operador?.id || bReal.operator?.id;
+                    const opA = operadores.find(o => { const oReal = o.operador || o.operator || o; return String(oReal.id) === String(idOpA); });
+                    const opB = operadores.find(o => { const oReal = o.operador || o.operator || o; return String(oReal.id) === String(idOpB); });
+                    vA = ((opA?.operador || opA?.operator || opA)?.nombre || (opA?.operador || opA?.operator || opA)?.name || "").toLowerCase(); 
+                    vB = ((opB?.operador || opB?.operator || opB)?.nombre || (opB?.operador || opB?.operator || opB)?.name || "").toLowerCase(); 
+                    break;
+                case "PUERTA/VIA": 
+                    const idPtoA = aReal.puntoId || aReal.spot_id || aReal.punto?.puntoId || aReal.punto?.id || aReal.spot?.id;
+                    const idPtoB = bReal.puntoId || bReal.spot_id || bReal.punto?.puntoId || bReal.punto?.id || bReal.spot?.id;
+                    const ptoA = puntos.find(p => { const pReal = p.punto || p.spot || p.point || p; return String(pReal.puntoId || pReal.id) === String(idPtoA); });
+                    const ptoB = puntos.find(p => { const pReal = p.punto || p.spot || p.point || p; return String(pReal.puntoId || pReal.id) === String(idPtoB); });
+                    vA = ((ptoA?.punto || ptoA?.spot || ptoA?.point || ptoA)?.codigo || (ptoA?.punto || ptoA?.spot || ptoA?.point || ptoA)?.code || "").toLowerCase(); 
+                    vB = ((ptoB?.punto || ptoB?.spot || ptoB?.point || ptoB)?.codigo || (ptoB?.punto || ptoB?.spot || ptoB?.point || ptoB)?.code || "").toLowerCase(); 
+                    break;
+                case "ESTADO": 
+                    vA = (aReal.estado || aReal.status || "").toLowerCase(); 
+                    vB = (bReal.estado || bReal.status || "").toLowerCase(); 
+                    break;
                 default: return 0;
             }
             if (vA < vB) return this.ordenAscendente ? -1 : 1;
@@ -196,24 +256,42 @@ export class TableroController {
     }
 
     mostrarDetalleOperacion(id) {
-        const op = (JSON.parse(localStorage.getItem("operaciones")) || []).find(o => o.operacionId === id);
-        if (!op) return;
+        if (!this.datosMemoria) return;
 
-        const operador = (JSON.parse(localStorage.getItem("operadores")) || []).find(o => o.operadorId === op.operadorId);
-        const punto = (JSON.parse(localStorage.getItem("puntos")) || []).find(p => p.puntoId === op.puntoId);
+        const opRaw = this.datosMemoria.operaciones.find(o => {
+            const oReal = o.operacion || o.operation || o; 
+            return String(oReal.id || oReal.operacionId) === String(id);
+        });
+        if (!opRaw) return;
         
-        document.getElementById("titulo-detalle").innerText = `${op.tipo.toLowerCase() === "tren" ? "🚂" : "✈️"} Detalles de la Operación`;
-        document.getElementById("detalle-contenido").innerHTML =/*html*/ `
-            <p>🏷️ <strong>Código:</strong> ${op.codigo}</p>
-            <p>🚏 <strong>Tipo:</strong> ${op.tipo.toUpperCase()}</p>
-            <p>🗺️ <strong>Trayecto:</strong> ${op.origen} ➡️ ${op.destino}</p>
-            <p>🏢 <strong>Operador:</strong> ${operador ? operador.nombre : 'N/A'}</p>
-            <p>🚪 <strong>Puerta/Vía:</strong> ${punto ? punto.codigo : 'N/A'}</p>
-            <p>🕒 <strong>Hora Programada:</strong> ${new Date(op.horaProgramada).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}</p>
-            <p>⏳ <strong>Hora Estimada:</strong> ${new Date(op.horaEstimada).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}</p>
-            <p>🚦 <strong>Estado:</strong> <span class="estado-tag state-${op.estado.toLowerCase()}">${op.estado}</span></p>
+        const op = opRaw.operacion || opRaw.operation || opRaw;
+
+        const idOperador = op.operadorId || op.operator_id || op.operador?.id || op.operator?.id;
+        const operadorRaw = this.datosMemoria.operadores.find(o => {
+            const oReal = o.operador || o.operator || o;
+            return String(oReal.id) === String(idOperador);
+        });
+        const operador = operadorRaw ? (operadorRaw.operador || operadorRaw.operator || operadorRaw) : null;
+
+        const idPunto = op.puntoId || op.spot_id || op.punto?.puntoId || op.punto?.id || op.spot?.id;
+        const puntoRaw = this.datosMemoria.puntos.find(p => {
+            const pReal = p.punto || p.spot || p.point || p;
+            return String(pReal.id || pReal.puntoId) === String(idPunto);
+        });
+        const punto = puntoRaw ? (puntoRaw.punto || puntoRaw.spot || puntoRaw.point || puntoRaw) : null;
+        
+        document.getElementById("titulo-detalle").innerText = `${(op.tipo || "").toLowerCase() === "tren" ? "🚂" : "✈️"} Detalles de la Operación`;
+        document.getElementById("detalle-contenido").innerHTML = /*html*/ `
+            <p>🏷️ <strong>Código:</strong> ${op.codigo || op.code || 'N/A'}</p>
+            <p>🚏 <strong>Tipo:</strong> ${(op.tipo || op.type || 'N/A').toUpperCase()}</p>
+            <p>🗺️ <strong>Trayecto:</strong> ${op.origen || op.origin || 'N/A'} ➡️ ${op.destino || op.destination || 'N/A'}</p>
+            <p>🏢 <strong>Operador:</strong> ${operador ? (operador.nombre || operador.name) : 'N/A'}</p>
+            <p>🚪 <strong>Puerta/Vía:</strong> ${punto ? (punto.codigo || punto.code) : 'N/A'}</p>
+            <p>🕒 <strong>Hora Programada:</strong> ${new Date(op.horaProgramada || op.scheduled_time || 0).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}</p>
+            <p>⏳ <strong>Hora Estimada:</strong> ${new Date(op.horaEstimada || op.estimated_time || 0).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}</p>
+            <p>🚦 <strong>Estado:</strong> <span class="estado-tag state-${(op.estado || op.status || '').toLowerCase()}">${op.estado || op.status}</span></p>
             <hr style="margin: 15px 0; border: 0; border-top: 1px solid var(--border-color);">
-            <p style="font-size:0.8rem; color:gray;">🔑 <strong>ULID Interno:</strong> ${op.operacionId}</p>
+            <p style="font-size:0.8rem; color:gray;">🔑 <strong>ID Interno:</strong> ${op.id || op.operacionId}</p>
         `;
         document.getElementById("modal-detalle")?.classList.remove("hidden");
     }
