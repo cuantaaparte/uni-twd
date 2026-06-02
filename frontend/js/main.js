@@ -1,4 +1,4 @@
-import { inicializarDatos } from "./data/seed.js";
+//import { inicializarDatos } from "./data/seed.js";
 // 📦 1. Importamos las nuevas vistas generadoras de HTML
 import { LayoutView } from "./views/LayoutView.js";
 import { AdminModalsView } from "./views/AdminModalsView.js";
@@ -14,29 +14,26 @@ document.addEventListener("DOMContentLoaded", () => {
     console.log("✈️ Sistema Iniciado - Arquitectura MVC Modular Full JS");
     
     // 1. Cargar Base de Datos Semilla
-    inicializarDatos();
+    //inicializarDatos();
 
     // 🏗️ 2. CONSTRUIR EL DOM (¡Fundamental que vaya aquí!)
     // Generamos el HTML base y los modales antes de que los controladores los busquen
     new LayoutView();
     new AdminModalsView();
 
-    // 🌗 3. Iniciar Gestor de Tema Oscuro/Claro
-    ThemeController.init();
-
-    // 📊 4. Iniciar el Tablero Principal (El corazón de la app)
+    // 📊 3. Iniciar el Tablero Principal (El corazón de la app)
     const tableroController = new TableroController();
 
-    // 🔐 5. Iniciar Controladores secundarios pasándoles la función para repintar la tabla
-    const authController = new AuthController(() => tableroController.aplicarFiltros());
-    const adminController = new AdminController(() => tableroController.aplicarFiltros());
+    // 🔐 4. Iniciar Controladores secundarios pasándoles la función para recargar los datos
+    const authController = new AuthController(() => tableroController.cargarDatos());
+    const adminController = new AdminController(() => tableroController.cargarDatos());
 
-    // 🚀 6. Arrancar la máquina
-    tableroController.aplicarFiltros();
+    // 🚀 5. Arrancar la máquina pidiendo los datos al servidor
+    tableroController.cargarDatos();
     
-    // 🔄 7. Bucle de refresco automático
+    // 🔄 6. Bucle de refresco automático
     setInterval(() => { 
-        console.log("Refrescando tablero de operaciones... 🔄"); 
-        tableroController.aplicarFiltros(); 
+        console.log("Refrescando datos del servidor... 🔄"); 
+        tableroController.cargarDatos(); 
     }, TIEMPO_REFRESCO_MS); 
 });

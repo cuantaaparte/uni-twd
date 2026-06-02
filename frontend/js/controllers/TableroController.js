@@ -1,6 +1,6 @@
 import { TableroView } from "../views/TableroView.js";
 import { normalizarIdColumna } from "../utils/helpers.js";
-import { DbOp } from "../data/DbOp.js"; // ✨ NUEVO IMPORT
+import { DbOp } from "../data/DbOp.js";
 
 export class TableroController {
     constructor(tableroViewInstance = null, inputBusquedaOverride = null) {
@@ -10,7 +10,29 @@ export class TableroController {
         
         this.inputBusqueda = inputBusquedaOverride || document.getElementById("busqueda-codigo");
 
+        // ✨ NUEVO: La memoria RAM de nuestro controlador para matar el lag
+        this.datosCache = { operaciones: [], operadores: [], puntos: [] };
+
         this.initListeners();
+    }
+
+    // ✨ AHORA CON TURBO: Las 3 peticiones viajan al mismo tiempo
+    async cargarDatos() {
+        try {
+            const [ops, opers, pts] = await Promise.all([
+                DbOp.getOperaciones(),
+                DbOp.getOperadores(),
+                DbOp.getPuntos()
+            ]);
+            
+            this.datosCache.operaciones = ops;
+            this.datosCache.operadores = opers;
+            this.datosCache.puntos = pts;
+            
+            this.aplicarFiltros(); 
+        } catch (error) {
+            console.error("Error descargando los datos:", error);
+        }
     }
 
     initListeners() {
@@ -97,23 +119,26 @@ export class TableroController {
         modalDetalle?.addEventListener("click", (e) => { if (e.target.id === "modal-detalle") modalDetalle.classList.add("hidden"); });
     }
 
-    async aplicarFiltros() { // ✨ NUEVO: Ahora es async
+    // ✨ AHORA ES SÍNCRONA E INSTANTÁNEA (Y tolera mayúsculas/minúsculas)
+    aplicarFiltros() { 
         const usuarioActivo = JSON.parse(sessionStorage.getItem("usuarioActivo"));
         
-        // ✨ NUEVO: Delegamos absolutamente todo a DbOp
-        const operaciones = await DbOp.getOperaciones();
-        const operadores = await DbOp.getOperadores();
-        const puntos = await DbOp.getPuntos();
+        // Leemos de la caché instantánea
+        const operaciones = this.datosCache.operaciones || [];
+        const operadores = this.datosCache.operadores || [];
+        const puntos = this.datosCache.puntos || [];
         
         const busqueda = this.inputBusqueda ? this.inputBusqueda.value.trim().toLowerCase() : "";
         
+        // 🛡️ CORRECCIÓN: Convertimos los checkboxes a minúsculas
         const checkBoxes = document.querySelectorAll(".chk-estado:checked");
-        const estadosSeleccionados = checkBoxes.length ? Array.from(checkBoxes).map(c => c.value) : ["TODOS"];
-        const mostrarTodos = estadosSeleccionados.includes("TODOS");
+        const estadosSeleccionados = checkBoxes.length ? Array.from(checkBoxes).map(c => c.value.toLowerCase()) : ["todos"];
+        const mostrarTodos = estadosSeleccionados.includes("todos");
 
         const filtradas = operaciones.filter(op => {
-            const coincideBusqueda = op.codigo.toLowerCase().includes(busqueda);
-            const coincideEstado = mostrarTodos || estadosSeleccionados.includes(op.estado);
+            const coincideBusqueda = (op.codigo || "").toLowerCase().includes(busqueda);
+            // 🛡️ CORRECCIÓN: Convertimos el estado de la base de datos a minúsculas
+            const coincideEstado = mostrarTodos || estadosSeleccionados.includes((op.estado || "").toLowerCase());
             return coincideBusqueda && coincideEstado;
         });
 
@@ -133,7 +158,6 @@ export class TableroController {
                 case "CODIGO": vA = a.codigo.toLowerCase(); vB = b.codigo.toLowerCase(); break;
                 case "DESTINO":
                 case "ORIGEN": vA = (a.sentido === "salida" ? a.destino : a.origen).toLowerCase(); vB = (b.sentido === "salida" ? b.destino : b.origen).toLowerCase(); break;
-                // ✨ NUEVO: Utilizamos o.id y p.id para buscar por clave primaria
                 case "OPERADOR": vA = (operadores.find(o => String(o.id) === String(a.operadorId))?.nombre || "").toLowerCase(); vB = (operadores.find(o => String(o.id) === String(b.operadorId))?.nombre || "").toLowerCase(); break;
                 case "PUERTA/VIA": vA = (puntos.find(p => String(p.id) === String(a.puntoId))?.codigo || "").toLowerCase(); vB = (puntos.find(p => String(p.id) === String(b.puntoId))?.codigo || "").toLowerCase(); break;
                 case "ESTADO": vA = a.estado.toLowerCase(); vB = b.estado.toLowerCase(); break;
@@ -187,16 +211,13 @@ export class TableroController {
         this.aplicarFiltros();
     }
 
-    async mostrarDetalleOperacion(id) { // ✨ NUEVO: Ahora es async y llama a DbOp
-        const operaciones = await DbOp.getOperaciones();
-        const op = operaciones.find(o => String(o.id) === String(id));
+    // ✨ AHORA ES SÍNCRONA E INSTANTÁNEA (Abre el modal al vuelo)
+    mostrarDetalleOperacion(id) { 
+        const op = this.datosCache.operaciones.find(o => String(o.id) === String(id));
         if (!op) return;
 
-        const operadores = await DbOp.getOperadores();
-        const operador = operadores.find(o => String(o.id) === String(op.operadorId));
-        
-        const puntos = await DbOp.getPuntos();
-        const punto = puntos.find(p => String(p.id) === String(op.puntoId));
+        const operador = this.datosCache.operadores.find(o => String(o.id) === String(op.operadorId));
+        const punto = this.datosCache.puntos.find(p => String(p.id) === String(op.puntoId));
         
         document.getElementById("titulo-detalle").innerText = `${op.tipo.toLowerCase() === "tren" ? "🚂" : "✈️"} Detalles de la Operación`;
         document.getElementById("detalle-contenido").innerHTML =/*html*/ `

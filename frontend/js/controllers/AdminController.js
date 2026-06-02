@@ -1,7 +1,7 @@
 import { DbOp } from "../data/DbOp.js";
 
 const ROL_GESTOR = "GESTOR";
-const ROL_PUBLICO = "PÚBLICO";
+const ROL_PUBLICO = "PUBLICO";
 
 export class AdminController {
     constructor(onDataChangedCallback) {
@@ -65,31 +65,42 @@ export class AdminController {
     async handleAccionesOperacionDOM(e) {
         const btnEditar = e.target.closest(".btn-editar");
         if (btnEditar) {
-            const operaciones = await DbOp.getOperaciones();
-            const op = operaciones.find(o => String(o.id) === btnEditar.getAttribute("data-id"));
+            document.getElementById("modal-operacion")?.classList.remove("hidden");
             
-            if (op) {
-                const operadores = await DbOp.getOperadores();
-                const puntos = await DbOp.getPuntos();
+            document.getElementById("op-operador").innerHTML = '<option>⏳ Cargando...</option>';
+            document.getElementById("op-punto").innerHTML = '<option>⏳ Cargando...</option>';
+
+            try {
+                const [operaciones, operadores, puntos] = await Promise.all([
+                    DbOp.getOperaciones(),
+                    DbOp.getOperadores(),
+                    DbOp.getPuntos()
+                ]);
                 
-                document.getElementById("op-id").value = op.id;
-                document.getElementById("op-estado").value = op.estado;
+                const op = operaciones.find(o => String(o.id) === btnEditar.getAttribute("data-id"));
                 
-                document.getElementById("op-operador").innerHTML = operadores.map(o => 
-                    `<option value="${o.id}" ${String(o.id) === String(op.operadorId) ? 'selected' : ''}>${o.nombre}</option>`
-                ).join("");
-                
-                document.getElementById("op-punto").innerHTML = puntos.map(p => 
-                    `<option value="${p.id}" ${String(p.id) === String(op.puntoId) ? 'selected' : ''}>${p.codigo}</option>`
-                ).join("");
-                
-                document.getElementById("modal-operacion")?.classList.remove("hidden");
+                if (op) {
+                    document.getElementById("op-id").value = op.id;
+                    document.getElementById("op-estado").value = op.estado;
+                    
+                    document.getElementById("op-operador").innerHTML = operadores.map(o => 
+                        `<option value="${o.id}" ${String(o.id) === String(op.operadorId) ? 'selected' : ''}>${o.nombre}</option>`
+                    ).join("");
+                    
+                    document.getElementById("op-punto").innerHTML = puntos.map(p => 
+                        `<option value="${p.id}" ${String(p.id) === String(op.puntoId) ? 'selected' : ''}>${p.codigo}</option>`
+                    ).join("");
+                }
+            } catch(error) {
+                console.error("Error al cargar datos para edición:", error);
             }
             return;
         }
 
         const btnBorrar = e.target.closest(".btn-borrar");
         if (btnBorrar && confirm("⚠️ ¿Deseas borrar definitivamente esta operación?")) {
+            const row = e.target.closest(".operacion-row");
+            if(row) row.style.opacity = "0.4"; // Feedback visual instantáneo
             await DbOp.deleteOperacion(btnBorrar.getAttribute("data-id"));
             this.onDataChanged();
         }
@@ -97,28 +108,51 @@ export class AdminController {
 
     async handleAperturaModales(e) {
         if (e.target.closest("#btn-nueva-operacion")) {
-            const operadores = await DbOp.getOperadores();
-            document.getElementById("crear-operador").innerHTML = operadores.map(o => `<option value="${o.id}">${o.nombre}</option>`).join("");
-            
-            await this.actualizarDesplegablePuntos(document.getElementById("crear-tipo")?.value || "");
-            
-            const selectSentido = document.getElementById("crear-sentido");
-            const labelCiudad = document.querySelector('label[for="crear-ciudad"]') || document.getElementById("crear-ciudad")?.previousElementSibling;
-            if (selectSentido && labelCiudad) labelCiudad.innerText = selectSentido.value === "llegada" ? "Origen" : "Destino";
-            
             document.getElementById("modal-crear")?.classList.remove("hidden");
+            
+            const selectOp = document.getElementById("crear-operador");
+            if(selectOp) selectOp.innerHTML = '<option>⏳ Cargando...</option>';
+
+            try {
+                const [operadores, puntos] = await Promise.all([
+                    DbOp.getOperadores(),
+                    DbOp.getPuntos()
+                ]);
+                
+                if(selectOp) selectOp.innerHTML = operadores.map(o => `<option value="${o.id}">${o.nombre}</option>`).join("");
+                
+                const tipoSeleccionado = document.getElementById("crear-tipo")?.value || "";
+                const esVuelo = tipoSeleccionado.toLowerCase().includes("vuelo");
+                const puntosFiltrados = puntos.filter(p => p.tipo.toLowerCase() === (esVuelo ? "puerta" : "via"));
+                
+                const selectPunto = document.getElementById("crear-punto");
+                if (selectPunto) {
+                    selectPunto.innerHTML = puntosFiltrados.map(p => `<option value="${p.id}">${p.codigo}</option>`).join("");
+                    const labelPunto = document.querySelector('label[for="crear-punto"]') || selectPunto.previousElementSibling;
+                    if (labelPunto) labelPunto.innerText = esVuelo ? "Puerta" : "Vía";
+                }
+                
+                const selectSentido = document.getElementById("crear-sentido");
+                const labelCiudad = document.querySelector('label[for="crear-ciudad"]') || document.getElementById("crear-ciudad")?.previousElementSibling;
+                if (selectSentido && labelCiudad) labelCiudad.innerText = selectSentido.value === "llegada" ? "Origen" : "Destino";
+            } catch(error) {
+                console.error("Error al cargar modal de nueva operación:", error);
+            }
         }
         else if (e.target.closest("#btn-gestionar-usuarios")) { 
-            await this.renderizarUsuarios(); 
             document.getElementById("modal-usuarios")?.classList.remove("hidden"); 
+            document.getElementById("lista-usuarios").innerHTML = "<p style='text-align:center; padding:15px;'>⏳ Descargando base de datos...</p>";
+            await this.renderizarUsuarios(); 
         }
         else if (e.target.closest("#btn-gestionar-operadores")) { 
-            await this.renderizarOperadores(); 
             document.getElementById("modal-operadores")?.classList.remove("hidden"); 
+            document.getElementById("lista-operadores").innerHTML = "<p style='text-align:center; padding:15px;'>⏳ Descargando base de datos...</p>";
+            await this.renderizarOperadores(); 
         }
         else if (e.target.closest("#btn-gestionar-puntos")) { 
-            await this.renderizarPuntos(); 
             document.getElementById("modal-puntos")?.classList.remove("hidden"); 
+            document.getElementById("lista-puntos").innerHTML = "<p style='text-align:center; padding:15px;'>⏳ Descargando base de datos...</p>";
+            await this.renderizarPuntos(); 
         }
     }
 
@@ -127,29 +161,48 @@ export class AdminController {
         const id = btnRol.getAttribute("data-id");
         const nuevoRol = btnRol.getAttribute("data-rol");
         
-        const usuarios = await DbOp.getUsers();
-        if (nuevoRol === ROL_PUBLICO && usuarios.filter(u => u.rol === ROL_GESTOR).length <= 1) {
-            return alert("⚠️ ALERTA DE SISTEMA: No puedes degradar al último Gestor disponible.");
-        }
+        // 👁️ FEEDBACK VISUAL
+        const textoOriginal = btnRol.innerText;
+        btnRol.innerText = "⏳...";
+        btnRol.disabled = true;
         
-        await DbOp.updateRolUser(id, [nuevoRol]);
-        
-        const userActivo = JSON.parse(sessionStorage.getItem("usuarioActivo"));
-        if (userActivo && String(userActivo.id) === String(id)) location.reload();
-        else { 
-            await this.renderizarUsuarios(); 
-            this.onDataChanged(); 
+        try {
+            const usuarios = await DbOp.getUsers();
+            if (nuevoRol === ROL_PUBLICO && usuarios.filter(u => u.rol === ROL_GESTOR).length <= 1) {
+                btnRol.innerText = textoOriginal;
+                btnRol.disabled = false;
+                return alert("⚠️ ALERTA DE SISTEMA: No puedes degradar al último Gestor disponible.");
+            }
+            
+            await DbOp.updateRolUser(id, [nuevoRol]);
+            
+            const userActivo = JSON.parse(sessionStorage.getItem("usuarioActivo"));
+            if (userActivo && String(userActivo.id) === String(id)) {
+                location.reload(); // Si se quita el rol a sí mismo, lo echamos al login
+            } else { 
+                await this.renderizarUsuarios(); 
+                this.onDataChanged(); 
+            }
+        } catch (error) {
+            alert("❌ Error al cambiar el rol: " + error.message);
+            // 🧹 Si algo explota, restauramos el botón
+            btnRol.innerText = textoOriginal;
+            btnRol.disabled = false;
         }
     }
 
     async handleBorrarCatalogos(e) {
         if (e.target.closest(".btn-borrar-operador")) {
             const id = e.target.closest(".btn-borrar-operador").getAttribute("data-id");
+            document.getElementById("lista-operadores").innerHTML = "<p style='text-align:center;'>⏳ Borrando en servidor...</p>";
+            
             await DbOp.deleteOperador(id);
             await this.renderizarOperadores(); 
             this.onDataChanged();
         } else if (e.target.closest(".btn-borrar-punto")) {
             const id = e.target.closest(".btn-borrar-punto").getAttribute("data-id");
+            document.getElementById("lista-puntos").innerHTML = "<p style='text-align:center;'>⏳ Borrando en servidor...</p>";
+            
             await DbOp.deletePunto(id);
             await this.renderizarPuntos(); 
             this.onDataChanged();
@@ -159,94 +212,166 @@ export class AdminController {
 
     async handleCrearOperacion(e) { 
         e.preventDefault();
+        
+        const btnSubmit = e.target.querySelector('button[type="submit"]');
+        const textOriginal = btnSubmit.innerText;
+        btnSubmit.innerText = "⏳ Creando...";
+        btnSubmit.disabled = true;
+
         const horaStr = document.getElementById("crear-hora").value;
-        if (!horaStr) return;
-        const horaIso = new Date(horaStr).toISOString();
+        if (!horaStr) {
+            btnSubmit.innerText = textOriginal;
+            btnSubmit.disabled = false;
+            return;
+        }
 
         const sentido = document.getElementById("crear-sentido").value;
         const ciudad = document.getElementById("crear-ciudad").value;
         
-        await DbOp.createOperacion({
-            tipo: document.getElementById("crear-tipo").value,
+        // 💡 CONSTRUCCIÓN DEL PAQUETE: Ajustado según el estándar de tu API
+        const datosNuevos = {
+            tipo: document.getElementById("crear-tipo").value, 
             codigo: document.getElementById("crear-codigo").value,
             sentido: sentido,
             origen: sentido === "llegada" ? ciudad : "Madrid",
             destino: sentido === "salida" ? ciudad : "Madrid",
-            horaProgramada: horaIso,
-            horaEstimada: horaIso,
-            estado: "programado",
+            horaProgramada: new Date(horaStr).toISOString(),
+            horaEstimada: new Date(horaStr).toISOString(),
+            estado: "PROGRAMADO", 
+            // Enviamos los IDs como enteros simples, que suele ser lo que espera Slim
             operadorId: parseInt(document.getElementById("crear-operador").value),
             puntoId: parseInt(document.getElementById("crear-punto").value)
-        });
+        };
 
-        e.target.reset(); 
-        document.getElementById("modal-crear").classList.add("hidden");
-        this.onDataChanged();
+        try {
+            await DbOp.createOperacion(datosNuevos);
+            e.target.reset(); 
+            document.getElementById("modal-crear").classList.add("hidden");
+            this.onDataChanged();
+        } catch(err) {
+            console.error("Fallo al crear operación:", err);
+            alert("Error: Revisa que todos los campos sean correctos.");
+        } finally {
+            btnSubmit.innerText = textOriginal;
+            btnSubmit.disabled = false;
+        }
     }
 
     async handleEditarOperacion(e) { 
         e.preventDefault();
-        const id = document.getElementById("op-id").value;
         
-        await DbOp.updateOperacion(id, {
+        const btnSubmit = e.target.querySelector('button[type="submit"]');
+        const textOriginal = btnSubmit.innerText;
+        btnSubmit.innerText = "⏳ Guardando...";
+        btnSubmit.disabled = true;
+
+        const id = document.getElementById("op-id").value;
+        const datosActualizados = {
             estado: document.getElementById("op-estado").value,
             operadorId: parseInt(document.getElementById("op-operador").value),
             puntoId: parseInt(document.getElementById("op-punto").value)
-        });
+        };
 
-        document.getElementById("modal-operacion").classList.add("hidden");
-        this.onDataChanged(); 
+        try {
+            await DbOp.updateOperacion(id, datosActualizados);
+            document.getElementById("modal-operacion").classList.add("hidden");
+            this.onDataChanged(); 
+        } catch(err) {
+            console.error("Fallo al editar operación:", err);
+            alert("Error al comunicarse con el servidor Docker.");
+        } finally {
+            btnSubmit.innerText = textOriginal;
+            btnSubmit.disabled = false;
+        }
     }
 
     async handleCrearOperador(e) { 
         e.preventDefault();
-        await DbOp.createOperador({
+        const btnSubmit = e.target.querySelector('button[type="submit"]');
+        const textOriginal = btnSubmit.innerText;
+        btnSubmit.innerText = "⏳...";
+        btnSubmit.disabled = true;
+
+        const datos = {
             nombre: document.getElementById("nuevo-op-nombre").value,
             siglas: document.getElementById("nuevo-op-siglas").value.toUpperCase()
-        });
-        
+        };
         e.target.reset(); 
-        await this.renderizarOperadores(); 
-        this.onDataChanged();
+
+        try {
+            await DbOp.createOperador(datos);
+            await this.renderizarOperadores(); 
+            this.onDataChanged();
+        } catch(err) {
+            console.error(err);
+        } finally {
+            btnSubmit.innerText = textOriginal;
+            btnSubmit.disabled = false;
+        }
     }
 
     async handleCrearPunto(e) { 
         e.preventDefault();
-        await DbOp.createPunto({
+        const btnSubmit = e.target.querySelector('button[type="submit"]');
+        const textOriginal = btnSubmit.innerText;
+        btnSubmit.innerText = "⏳...";
+        btnSubmit.disabled = true;
+
+        const datos = {
             tipo: document.getElementById("nuevo-pto-tipo").value,
             codigo: document.getElementById("nuevo-pto-codigo").value.toUpperCase()
-        });
-        
+        };
         e.target.reset(); 
-        await this.renderizarPuntos(); 
-        this.onDataChanged();
+
+        try {
+            await DbOp.createPunto(datos);
+            await this.renderizarPuntos(); 
+            this.onDataChanged();
+        } catch(err) {
+            console.error(err);
+        } finally {
+            btnSubmit.innerText = textOriginal;
+            btnSubmit.disabled = false;
+        }
     }
 
     async renderizarUsuarios() { 
-        const usu = await DbOp.getUsers();
-        document.getElementById("lista-usuarios").innerHTML = usu.map(u => `
-            <article class="modal-list-row" style="grid-template-columns: 2fr 1fr 1.5fr;">
-                <span style="font-weight:bold;">${u.email}</span>
-                <span style="color:${u.rol === ROL_GESTOR ? '#2ecc71' : '#95a5a6'}; font-size:0.8rem; font-weight:bold;">${u.rol}</span>
-                <button class="btn-cambiar-rol" data-id="${u.id}" data-rol="${u.rol === ROL_GESTOR ? ROL_PUBLICO : ROL_GESTOR}" style="background:#3498db; color:white; border:none; border-radius:4px; padding: 6px; cursor:pointer;">Cambiar Rol</button>
-            </article>`).join("");
+        try {
+            const usu = await DbOp.getUsers();
+            document.getElementById("lista-usuarios").innerHTML = usu.map(u => `
+                <article class="modal-list-row" style="grid-template-columns: 2fr 1fr 1.5fr;">
+                    <span style="font-weight:bold;">${u.email}</span>
+                    <span style="color:${u.rol === ROL_GESTOR ? '#2ecc71' : '#95a5a6'}; font-size:0.8rem; font-weight:bold;">${u.rol}</span>
+                    <button class="btn-cambiar-rol" data-id="${u.id}" data-rol="${u.rol === ROL_GESTOR ? ROL_PUBLICO : ROL_GESTOR}" style="background:#3498db; color:white; border:none; border-radius:4px; padding: 6px; cursor:pointer;">Cambiar Rol</button>
+                </article>`).join("");
+        } catch(err) {
+            document.getElementById("lista-usuarios").innerHTML = "<p>Error de conexión.</p>";
+        }
     }
 
     async renderizarOperadores() { 
-        const op = await DbOp.getOperadores();
-        document.getElementById("lista-operadores").innerHTML = op.map(o => `
-            <article class="modal-list-row" style="grid-template-columns: 2fr 1fr 1fr;">
-                <span style="font-weight:bold;">${o.nombre}</span><span>${o.siglas}</span>
-                <button class="btn-borrar-operador" data-id="${o.id}" style="background:#e74c3c; color:white; border:none; border-radius:4px; padding: 6px; cursor:pointer;">Borrar 🗑️</button>
-            </article>`).join("");
+        try {
+            const op = await DbOp.getOperadores();
+            document.getElementById("lista-operadores").innerHTML = op.map(o => `
+                <article class="modal-list-row" style="grid-template-columns: 2fr 1fr 1fr;">
+                    <span style="font-weight:bold;">${o.nombre}</span><span>${o.siglas}</span>
+                    <button class="btn-borrar-operador" data-id="${o.id}" style="background:#e74c3c; color:white; border:none; border-radius:4px; padding: 6px; cursor:pointer;">Borrar 🗑️</button>
+                </article>`).join("");
+        } catch(err) {
+            document.getElementById("lista-operadores").innerHTML = "<p>Error de conexión.</p>";
+        }
     }
 
     async renderizarPuntos() { 
-        const pt = await DbOp.getPuntos();
-        document.getElementById("lista-puntos").innerHTML = pt.map(p => `
-            <article class="modal-list-row" style="grid-template-columns: 1fr 2fr 1fr;">
-                <span style="font-weight:bold;">${p.tipo}</span><span>${p.codigo}</span>
-                <button class="btn-borrar-punto" data-id="${p.id}" style="background:#e74c3c; color:white; border:none; border-radius:4px; padding: 6px; cursor:pointer;">Borrar 🗑️</button>
-            </article>`).join("");
+        try {
+            const pt = await DbOp.getPuntos();
+            document.getElementById("lista-puntos").innerHTML = pt.map(p => `
+                <article class="modal-list-row" style="grid-template-columns: 1fr 2fr 1fr;">
+                    <span style="font-weight:bold;">${p.tipo}</span><span>${p.codigo}</span>
+                    <button class="btn-borrar-punto" data-id="${p.id}" style="background:#e74c3c; color:white; border:none; border-radius:4px; padding: 6px; cursor:pointer;">Borrar 🗑️</button>
+                </article>`).join("");
+        } catch(err) {
+            document.getElementById("lista-puntos").innerHTML = "<p>Error de conexión.</p>";
+        }
     }
 }

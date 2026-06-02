@@ -1,5 +1,5 @@
 import { AuthView } from "../views/AuthView.js";
-import { DbOp } from "../data/DbOp.js"; // ✨ NUEVO IMPORT
+import { DbOp } from "../data/DbOp.js"; 
 
 export class AuthController {
     constructor(onAuthChangedCallback, authViewInstance = null) {
@@ -35,12 +35,15 @@ export class AuthController {
         const password = document.getElementById("auth-password").value;
         const modoFormulario = e.target.dataset.mode;
         
+        // 👁️ FEEDBACK VISUAL: Atrapamos el botón, guardamos su texto y ponemos el reloj
+        const btnSubmit = e.target.querySelector('button[type="submit"]');
+        const textoOriginal = btnSubmit.innerText;
+        btnSubmit.innerText = "⏳ Esperando al servidor...";
+        btnSubmit.disabled = true;
+        
         try {
             if (modoFormulario === "login") {
-                // 1. Pedimos a DbOp que intente hacer el login
                 await DbOp.login(email, password);
-                
-                // 2. Si no ha explotado (login correcto), buscamos los datos del usuario
                 const usuarios = await DbOp.getUsers();
                 const usuarioValido = usuarios.find(u => u.email === email);
                 
@@ -54,25 +57,23 @@ export class AuthController {
                 }
                 
             } else {
-                // Validación Frontend básica
                 if (password.length <= 8 || !/\d/.test(password)) {
+                    // Si falla la validación, restauramos el botón antes de salir
+                    btnSubmit.innerText = textoOriginal;
+                    btnSubmit.disabled = false;
                     return alert("La contraseña debe tener más de 8 caracteres y contener al menos 1 número 🔐");
                 }
                 
-                const usuarios = await DbOp.getUsers();
-                if (usuarios.some(u => u.email === email)) {
-                    return alert("El Email introducido ya existe ⚠️");
-                }
-                
-                // Pedimos a DbOp que lo registre
                 await DbOp.register(email, password);
-                
-                alert("Cuenta creada con éxito ✅");
+                alert("Cuenta creada con éxito ✅ Ya puedes iniciar sesión.");
                 this.authView.show(false); 
             }
         } catch (error) {
-            // Si DbOp.login falla (contraseña mal, servidor caído...), salta aquí
-            alert("❌ Fallo en la autenticación: " + error.message);
+            alert("❌ Operación fallida: " + error.message);
+        } finally {
+            // 🧹 LIMPIEZA: Pase lo que pase (éxito o error), devolvemos el botón a la normalidad
+            btnSubmit.innerText = textoOriginal;
+            btnSubmit.disabled = false;
         }
     }
 }

@@ -9,12 +9,14 @@ export class TableroView {
     render(salidas, llegadas, operadores, puntos, usuarioActivo = null) {
         const esGestor = usuarioActivo && usuarioActivo.rol === "GESTOR";
 
-        [this.panelSalidas, this.panelLlegadas].forEach(panel => 
-            esGestor ? panel.classList.add("modo-gestor") : panel.classList.remove("modo-gestor")
-        );
+        [this.panelSalidas, this.panelLlegadas].forEach(panel => {
+            if (panel) {
+                esGestor ? panel.classList.add("modo-gestor") : panel.classList.remove("modo-gestor");
+            }
+        });
 
-        this.#renderizarPanel(salidas, this.listaSalidas, "hist-salidas", operadores, puntos, esGestor);
-        this.#renderizarPanel(llegadas, this.listaLlegadas, "hist-llegadas", operadores, puntos, esGestor);
+        if (this.listaSalidas) this.#renderizarPanel(salidas, this.listaSalidas, "hist-salidas", operadores, puntos, esGestor);
+        if (this.listaLlegadas) this.#renderizarPanel(llegadas, this.listaLlegadas, "hist-llegadas", operadores, puntos, esGestor);
     }
 
     #renderizarPanel(operaciones, contenedor, idToggle, operadores, puntos, esGestor) {
@@ -27,10 +29,8 @@ export class TableroView {
 
         let html = "";
         
-        /* html */
         html += `<div class="tabla-cuerpo cuerpo-reciente">${this.#generarBloqueFilas(recientes, operadores, puntos, esGestor)}</div>`;
         
-        /* html */
         html += `
             <div class="toggle-historico" data-target="${idToggle}">
                 <span>${iconoFlecha}</span> 
@@ -38,7 +38,6 @@ export class TableroView {
                 <span>${iconoFlecha}</span>
             </div>`;
 
-        /* html */
         html += `<div id="${idToggle}" class="${estaAbierto ? "" : "hidden"}">`;
         if (historicas.length === 0) {
             html += `<div style="padding: 15px; text-align: center; color: var(--text-muted, gray); font-style: italic; border-bottom: 2px solid var(--border-color);">Ninguna operación de hace más de 24h</div>`;
@@ -52,8 +51,15 @@ export class TableroView {
 
     #generarBloqueFilas(operaciones, operadores, puntos, esGestor) {
         return operaciones.map(op => {
-            const opEncontrado = operadores.find(o => o.operadorId === op.operadorId);
-            const ptEncontrado = puntos.find(p => p.puntoId === op.puntoId);
+            // 🛡️ BÚSQUEDA A PRUEBA DE BOMBAS (Strings + Respaldo de Docker)
+            // 1. Buscamos en la lista global convirtiendo ambos a texto puro
+            let opEncontrado = operadores.find(o => String(o.id) === String(op.operadorId));
+            // 2. Si no lo pilla, miramos si el backend nos mandó el objeto anidado dentro de la operación
+            if (!opEncontrado && op.operador) opEncontrado = op.operador;
+
+            let ptEncontrado = puntos.find(p => String(p.id) === String(op.puntoId));
+            if (!ptEncontrado && op.punto) ptEncontrado = op.punto;
+
             return this.generarFilaHTML(op, opEncontrado, ptEncontrado, esGestor);
         }).join("");
     }
@@ -64,18 +70,20 @@ export class TableroView {
         const htmlIcono = this.#obtenerIconoOperador(operador);
         
         const ciudadDestinoOrigen = operacion.sentido === "salida" ? operacion.destino : operacion.origen;
-        const nombreOperador = operador ? operador.nombre : "Desconocido";
+        
+        // 🔍 Extracción segura: intentamos leer todas las posibles traducciones del backend
+        const nombreOperador = operador ? (operador.nombre || operador.name || "Desconocido") : "Desconocido";
+        const codigoPunto = punto ? (punto.codigo || punto.code || punto.name || "---") : "---";
 
-        /* html */
         return `
-            <article class="operacion-row" data-id="${operacion.operacionId}">
+            <article class="operacion-row" data-id="${operacion.operacionId || operacion.id}">
                 <span style="${estiloColorFecha}">${textoFechaHora}</span>
                 <span style="font-weight: bold; color: var(--accent-blue, #0f3460);">${operacion.codigo}</span>
                 <span>${ciudadDestinoOrigen}</span>
                 <span class="operador-info">${htmlIcono} ${nombreOperador}</span>
-                <span>${punto ? punto.codigo : "---"}</span>
-                <span class="estado-tag state-${operacion.estado.toLowerCase()}">${operacion.estado}</span>
-                ${this.#getAccionesGestor(esGestor, operacion.operacionId)} 
+                <span>${codigoPunto}</span>
+                <span class="estado-tag state-${(operacion.estado || "").toLowerCase()}">${operacion.estado}</span>
+                ${this.#getAccionesGestor(esGestor, operacion.operacionId || operacion.id)} 
             </article>
         `;
     }
@@ -104,9 +112,10 @@ export class TableroView {
     }
 
     #obtenerIconoOperador(operador) {
-        const url = operador ? operador.urlIcono : "🟧";
-        const esImagen = url && (url.startsWith("http") || url.includes("/") || url.includes("."));
-        /* html */
+        const url = operador ? (operador.urlIcono || operador.icon || operador.logo) : null;
+        if (!url) return `<span style="font-size: 1.2rem; margin-right: 5px; vertical-align: middle;">🟧</span>`;
+        
+        const esImagen = url.startsWith("http") || url.includes("/") || url.includes(".");
         return esImagen
             ? `<img src="${url}" alt="${operador?.siglas || 'N/A'}" width="20" style="margin-right: 5px; vertical-align: middle;">`
             : `<span style="font-size: 1.2rem; margin-right: 5px; vertical-align: middle;">${url}</span>`;
@@ -114,7 +123,6 @@ export class TableroView {
 
     #getAccionesGestor(esGestor, opId) {
         if (!esGestor) return "";
-        /* html */
         return `
             <nav class="acciones-gestor">
                 <button class="btn-icon btn-editar" data-id="${opId}" title="Editar">✏️</button>
