@@ -1,5 +1,6 @@
 import { TableroView } from "../views/TableroView.js";
 import { normalizarIdColumna } from "../utils/helpers.js";
+import { DbOp } from "../data/DbOp.js"; // ✨ NUEVO IMPORT
 
 export class TableroController {
     constructor(tableroViewInstance = null, inputBusquedaOverride = null) {
@@ -22,26 +23,22 @@ export class TableroController {
             });
         }
 
-        // ✨ NUEVO: Lógica del Custom Multi-Select
         const btnFiltro = document.getElementById("btn-filtro-estado");
         const dropdownFiltro = document.getElementById("dropdown-filtro-estado");
         const checkboxes = document.querySelectorAll(".chk-estado");
 
         if (btnFiltro && dropdownFiltro) {
-            // 1. Abrir/Cerrar menú
             btnFiltro.addEventListener("click", (e) => {
                 e.stopPropagation();
                 dropdownFiltro.classList.toggle("hidden");
             });
 
-            // 2. Cerrar al hacer clic fuera del filtro
             document.addEventListener("click", (e) => {
                 if (!e.target.closest("#custom-filter-container")) {
                     dropdownFiltro.classList.add("hidden");
                 }
             });
 
-            // 3. Restaurar estado de memoria
             let estadoGuardado = ["TODOS"];
             try {
                 const memoria = sessionStorage.getItem("memoriaEstado");
@@ -51,18 +48,14 @@ export class TableroController {
             checkboxes.forEach(chk => {
                 chk.checked = estadoGuardado.includes(chk.value);
                 
-                // 4. Lógica de selección inteligente "TODOS" vs "RESTO"
                 chk.addEventListener("change", (e) => {
                     if (e.target.value === "TODOS" && e.target.checked) {
-                        // Si marco TODOS, desmarco todo lo demás
                         checkboxes.forEach(c => { if(c.value !== "TODOS") c.checked = false; });
                     } else if (e.target.value !== "TODOS" && e.target.checked) {
-                        // Si marco un estado, desmarco la opción TODOS
                         const chkTodos = document.querySelector('.chk-estado[value="TODOS"]');
                         if (chkTodos) chkTodos.checked = false;
                     }
 
-                    // Recuperar qué hemos marcado. Si desmarcamos todo, forzamos TODOS
                     let seleccionados = Array.from(checkboxes).filter(c => c.checked).map(c => c.value);
                     if (seleccionados.length === 0) {
                         seleccionados = ["TODOS"];
@@ -70,7 +63,6 @@ export class TableroController {
                         if(chkTodos) chkTodos.checked = true;
                     }
 
-                    // Cambiar el texto del botón principal según lo seleccionado
                     btnFiltro.innerText = seleccionados.includes("TODOS") 
                         ? "Estados: Todos ▼" 
                         : `Estados: ${seleccionados.length} selec. ▼`;
@@ -80,7 +72,6 @@ export class TableroController {
                 });
             });
 
-            // Ajustar el texto del botón nada más cargar
             const iniciales = Array.from(checkboxes).filter(c => c.checked).map(c => c.value);
             btnFiltro.innerText = iniciales.includes("TODOS") ? "Estados: Todos ▼" : `Estados: ${iniciales.length} selec. ▼`;
         }
@@ -106,22 +97,22 @@ export class TableroController {
         modalDetalle?.addEventListener("click", (e) => { if (e.target.id === "modal-detalle") modalDetalle.classList.add("hidden"); });
     }
 
-    aplicarFiltros() {
+    async aplicarFiltros() { // ✨ NUEVO: Ahora es async
         const usuarioActivo = JSON.parse(sessionStorage.getItem("usuarioActivo"));
-        const operaciones = JSON.parse(localStorage.getItem("operaciones")) || [];
-        const operadores = JSON.parse(localStorage.getItem("operadores")) || [];
-        const puntos = JSON.parse(localStorage.getItem("puntos")) || [];
+        
+        // ✨ NUEVO: Delegamos absolutamente todo a DbOp
+        const operaciones = await DbOp.getOperaciones();
+        const operadores = await DbOp.getOperadores();
+        const puntos = await DbOp.getPuntos();
         
         const busqueda = this.inputBusqueda ? this.inputBusqueda.value.trim().toLowerCase() : "";
         
-        // Leemos las opciones seleccionadas directamente del HTML (Checkboxes)
         const checkBoxes = document.querySelectorAll(".chk-estado:checked");
         const estadosSeleccionados = checkBoxes.length ? Array.from(checkBoxes).map(c => c.value) : ["TODOS"];
         const mostrarTodos = estadosSeleccionados.includes("TODOS");
 
         const filtradas = operaciones.filter(op => {
             const coincideBusqueda = op.codigo.toLowerCase().includes(busqueda);
-            // Si tiene TODOS marcado o el estado de la fila está en el array de seleccionados
             const coincideEstado = mostrarTodos || estadosSeleccionados.includes(op.estado);
             return coincideBusqueda && coincideEstado;
         });
@@ -142,8 +133,9 @@ export class TableroController {
                 case "CODIGO": vA = a.codigo.toLowerCase(); vB = b.codigo.toLowerCase(); break;
                 case "DESTINO":
                 case "ORIGEN": vA = (a.sentido === "salida" ? a.destino : a.origen).toLowerCase(); vB = (b.sentido === "salida" ? b.destino : b.origen).toLowerCase(); break;
-                case "OPERADOR": vA = (operadores.find(o => o.operadorId === a.operadorId)?.nombre || "").toLowerCase(); vB = (operadores.find(o => o.operadorId === b.operadorId)?.nombre || "").toLowerCase(); break;
-                case "PUERTA/VIA": vA = (puntos.find(p => p.puntoId === a.puntoId)?.codigo || "").toLowerCase(); vB = (puntos.find(p => p.puntoId === b.puntoId)?.codigo || "").toLowerCase(); break;
+                // ✨ NUEVO: Utilizamos o.id y p.id para buscar por clave primaria
+                case "OPERADOR": vA = (operadores.find(o => String(o.id) === String(a.operadorId))?.nombre || "").toLowerCase(); vB = (operadores.find(o => String(o.id) === String(b.operadorId))?.nombre || "").toLowerCase(); break;
+                case "PUERTA/VIA": vA = (puntos.find(p => String(p.id) === String(a.puntoId))?.codigo || "").toLowerCase(); vB = (puntos.find(p => String(p.id) === String(b.puntoId))?.codigo || "").toLowerCase(); break;
                 case "ESTADO": vA = a.estado.toLowerCase(); vB = b.estado.toLowerCase(); break;
                 default: return 0;
             }
@@ -195,12 +187,16 @@ export class TableroController {
         this.aplicarFiltros();
     }
 
-    mostrarDetalleOperacion(id) {
-        const op = (JSON.parse(localStorage.getItem("operaciones")) || []).find(o => o.operacionId === id);
+    async mostrarDetalleOperacion(id) { // ✨ NUEVO: Ahora es async y llama a DbOp
+        const operaciones = await DbOp.getOperaciones();
+        const op = operaciones.find(o => String(o.id) === String(id));
         if (!op) return;
 
-        const operador = (JSON.parse(localStorage.getItem("operadores")) || []).find(o => o.operadorId === op.operadorId);
-        const punto = (JSON.parse(localStorage.getItem("puntos")) || []).find(p => p.puntoId === op.puntoId);
+        const operadores = await DbOp.getOperadores();
+        const operador = operadores.find(o => String(o.id) === String(op.operadorId));
+        
+        const puntos = await DbOp.getPuntos();
+        const punto = puntos.find(p => String(p.id) === String(op.puntoId));
         
         document.getElementById("titulo-detalle").innerText = `${op.tipo.toLowerCase() === "tren" ? "🚂" : "✈️"} Detalles de la Operación`;
         document.getElementById("detalle-contenido").innerHTML =/*html*/ `
@@ -213,7 +209,7 @@ export class TableroController {
             <p>⏳ <strong>Hora Estimada:</strong> ${new Date(op.horaEstimada).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}</p>
             <p>🚦 <strong>Estado:</strong> <span class="estado-tag state-${op.estado.toLowerCase()}">${op.estado}</span></p>
             <hr style="margin: 15px 0; border: 0; border-top: 1px solid var(--border-color);">
-            <p style="font-size:0.8rem; color:gray;">🔑 <strong>ULID Interno:</strong> ${op.operacionId}</p>
+            <p style="font-size:0.8rem; color:gray;">🔑 <strong>ID Interno:</strong> ${op.id}</p>
         `;
         document.getElementById("modal-detalle")?.classList.remove("hidden");
     }

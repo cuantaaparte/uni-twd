@@ -1,6 +1,9 @@
 import { jest } from '@jest/globals';
 import { TableroController } from '../../../js/controllers/TableroController.js';
 
+// ⏱️ TRUCO MÁGICO: Pausa para esperar a las promesas
+const esperarAsincronia = () => new Promise(resolve => setTimeout(resolve, 0));
+
 describe('📊 Controlador del Tablero (TableroController)', () => {
     let mockTableroView;
     let tableroController;
@@ -47,11 +50,12 @@ describe('📊 Controlador del Tablero (TableroController)', () => {
     });
 
     describe('Inicialización y Memoria de Filtros 💾', () => {
-        it('debería restaurar la búsqueda y los MÚLTIPLES filtros desde sessionStorage al iniciar', () => {
+        it('debería restaurar la búsqueda y los MÚLTIPLES filtros desde sessionStorage al iniciar', async () => {
             sessionStorage.setItem("memoriaBusqueda", "RYN");
             sessionStorage.setItem("memoriaEstado", JSON.stringify(["PROGRAMADO", "LLEGADO"]));
 
             tableroController = new TableroController(mockTableroView);
+            await esperarAsincronia(); // ⏳
 
             expect(tableroController.inputBusqueda.value).toBe("RYN");
             
@@ -86,19 +90,24 @@ describe('📊 Controlador del Tablero (TableroController)', () => {
             tableroController = new TableroController(mockTableroView);
         });
 
-        it('debería filtrar por buscador de código en tiempo real', () => {
+        it('debería filtrar por buscador de código en tiempo real', async () => {
             tableroController.inputBusqueda.value = "vlg";
             tableroController.aplicarFiltros();
+            
+            await esperarAsincronia(); // ⏳
+
             const llegadas = mockTableroView.render.mock.calls[0][1]; 
             expect(llegadas[0].codigo).toBe("VLG456");
         });
 
-        it('debería invertir el orden si se clica la columna activa', () => {
+        it('debería invertir el orden si se clica la columna activa', async () => {
             tableroController.columnaActivaID = "FECHA-HORA";
             tableroController.ordenAscendente = true;
 
             const span = document.getElementById("cabecera-fecha");
             span.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+
+            await esperarAsincronia(); // ⏳
 
             expect(tableroController.ordenAscendente).toBe(false);
         });

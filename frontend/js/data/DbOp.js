@@ -6,16 +6,22 @@ export class DbOp {
     // 🔐 AUTENTICACIÓN / SESIÓN
     // ==========================================
     static async login(email, password) {
-        // Simulación de login local
+        // 🪄 TRUCO: Ahora el mock SÍ comprueba las credenciales de verdad
+        const usuarios = await this.getUsers();
+        const usuarioValido = usuarios.find(u => u.email === email && u.password === password);
+        
+        if (!usuarioValido) throw new Error("Credenciales incorrectas");
+
         const tokenSimulado = "token_local_key_jwt";
         sessionStorage.setItem("jwt_token", tokenSimulado);
         return { access_token: tokenSimulado };
     }
 
     static async register(email, password) {
-        let usuarios = JSON.parse(localStorage.getItem("usuarios_local")) || [];
-        usuarios.push({ id: Date.now(), email, rol: "PÚBLICO" });
-        localStorage.setItem("usuarios_local", JSON.stringify(usuarios));
+        // 🔧 CORRECCIÓN: Volvemos a usar tu clave original "usuarios"
+        let usuarios = JSON.parse(localStorage.getItem("usuarios")) || [];
+        usuarios.push({ id: Date.now(), email, password, rol: "PÚBLICO" });
+        localStorage.setItem("usuarios", JSON.stringify(usuarios));
         return true;
     }
 
@@ -23,18 +29,20 @@ export class DbOp {
     // 👥 GESTIÓN DE USUARIOS
     // ==========================================
     static async getUsers() {
-        return JSON.parse(localStorage.getItem("usuarios_local")) || [
-            { id: 1, email: "admin@etsisi.upm.es", rol: "GESTOR" },
-            { id: 2, email: "user@etsisi.upm.es", rol: "PÚBLICO" }
+        // 🔧 CORRECCIÓN: Volvemos a usar tu clave original "usuarios" y añadimos contraseñas a la semilla
+        const raw = JSON.parse(localStorage.getItem("usuarios")) || [
+            { id: 1, email: "admin@etsisi.upm.es", password: "Password123!", rol: "GESTOR" },
+            { id: 2, email: "user@etsisi.upm.es", password: "Password123!", rol: "PÚBLICO" }
         ];
+        return raw.map(u => ({ ...u, id: u.id || u.userId }));
     }
 
     static async updateRolUser(userId, nuevoRol) {
         let usuarios = await this.getUsers();
         const idx = usuarios.findIndex(u => String(u.id) === String(userId));
         if (idx !== -1) {
-            usuarios[idx].rol = nuevoRol[0]; // Guardamos el rol principal
-            localStorage.setItem("usuarios_local", JSON.stringify(usuarios));
+            usuarios[idx].rol = nuevoRol[0]; 
+            localStorage.setItem("usuarios", JSON.stringify(usuarios)); // 🔧 CORRECCIÓN AQUÍ TAMBIÉN
         }
         return true;
     }
@@ -43,7 +51,9 @@ export class DbOp {
     // 🏢 CATÁLOGO: OPERADORES
     // ==========================================
     static async getOperadores() {
-        return JSON.parse(localStorage.getItem("operadores")) || [];
+        const raw = JSON.parse(localStorage.getItem("operadores")) || [];
+        // 🪄 TRUCO: Si el dato es antiguo (operadorId), lo clonamos como .id para que el front no explote
+        return raw.map(o => ({ ...o, id: o.id || o.operadorId }));
     }
 
     static async createOperador(datos) {
@@ -69,7 +79,9 @@ export class DbOp {
     // 🚏 CATÁLOGO: PUNTOS (PUERTAS / VÍAS)
     // ==========================================
     static async getPuntos() {
-        return JSON.parse(localStorage.getItem("puntos")) || [];
+        const raw = JSON.parse(localStorage.getItem("puntos")) || [];
+        // 🪄 TRUCO: puntoId -> id
+        return raw.map(p => ({ ...p, id: p.id || p.puntoId }));
     }
 
     static async createPunto(datos) {
@@ -94,7 +106,9 @@ export class DbOp {
     // ✈️ OPERACIONES (VUELOS / TRENES)
     // ==========================================
     static async getOperaciones() {
-        return JSON.parse(localStorage.getItem("operaciones")) || [];
+        const raw = JSON.parse(localStorage.getItem("operaciones")) || [];
+        // 🪄 TRUCO: operacionId -> id
+        return raw.map(o => ({ ...o, id: o.id || o.operacionId }));
     }
 
     static async createOperacion(datos) {
@@ -119,6 +133,7 @@ export class DbOp {
     static async updateOperacion(id, datosActualizados) {
         let ops = await this.getOperaciones();
         const idx = ops.findIndex(o => String(o.id) === String(id));
+        
         if (idx !== -1) {
             ops[idx] = { ...ops[idx], ...datosActualizados };
             localStorage.setItem("operaciones", JSON.stringify(ops));

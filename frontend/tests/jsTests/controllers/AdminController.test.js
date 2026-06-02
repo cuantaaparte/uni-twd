@@ -1,6 +1,9 @@
 import { jest } from '@jest/globals';
 import { AdminController } from '../../../js/controllers/AdminController.js';
 
+// ⏱️ TRUCO MÁGICO: Pausa para esperar a las promesas
+const esperarAsincronia = () => new Promise(resolve => setTimeout(resolve, 0));
+
 describe('⚙️ Controlador de Administración (AdminController)', () => {
     let mockOnDataChanged;
     let adminController;
@@ -42,7 +45,6 @@ describe('⚙️ Controlador de Administración (AdminController)', () => {
             <div id="lista-puntos"></div>
         `;
 
-        // Simulamos base de datos inicial para los Selects Dependientes
         localStorage.setItem("puntos", JSON.stringify([
             { puntoId: 1, tipo: "PUERTA", codigo: "T1-A1" },
             { puntoId: 2, tipo: "VIA", codigo: "VIA 4" }
@@ -53,10 +55,12 @@ describe('⚙️ Controlador de Administración (AdminController)', () => {
     });
 
     describe('Interacción Dinámica de Formularios (Selects Dependientes) 🔄', () => {
-        it('debería mostrar "Vía" y filtrar puntos al seleccionar "Tren"', () => {
+        it('debería mostrar "Vía" y filtrar puntos al seleccionar "Tren"', async () => {
             const selectTipo = document.getElementById("crear-tipo");
             selectTipo.value = "Tren";
             selectTipo.dispatchEvent(new Event("change"));
+
+            await esperarAsincronia(); // ⏳
 
             const labelPunto = document.querySelector('label[for="crear-punto"]');
             const opcionesPunto = document.getElementById("crear-punto").innerHTML;
@@ -90,63 +94,70 @@ describe('⚙️ Controlador de Administración (AdminController)', () => {
     });
 
     describe('Gestión de Usuarios y Roles', () => {
-        it('debería impedir degradar al último GESTOR del sistema', () => {
-            const usuarios = [{ email: 'admin@aeropuerto.com', rol: 'GESTOR' }];
+        it('debería impedir degradar al último GESTOR del sistema', async () => {
+            const usuarios = [{ id: 1, email: 'admin@aeropuerto.com', rol: 'GESTOR' }];
             localStorage.setItem('usuarios', JSON.stringify(usuarios));
 
             const botonCambiar = document.createElement('button');
             botonCambiar.className = 'btn-cambiar-rol';
-            botonCambiar.setAttribute('data-email', 'admin@aeropuerto.com');
+            botonCambiar.setAttribute('data-id', '1'); // 🔧 Actualizado a data-id
             botonCambiar.setAttribute('data-rol', 'PÚBLICO'); 
             document.body.appendChild(botonCambiar);
 
             botonCambiar.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+            
+            await esperarAsincronia(); // ⏳
 
             expect(window.alert).toHaveBeenCalledWith(expect.stringContaining('ALERTA DE SISTEMA: No puedes degradar al último Gestor'));
         });
 
-        it('debería permitir degradar a un GESTOR si hay más de uno', () => {
+        it('debería permitir degradar a un GESTOR si hay más de uno', async () => {
             const usuarios = [
-                { email: 'admin1@aeropuerto.com', rol: 'GESTOR' },
-                { email: 'admin2@aeropuerto.com', rol: 'GESTOR' }
+                { id: 1, email: 'admin1@aeropuerto.com', rol: 'GESTOR' },
+                { id: 2, email: 'admin2@aeropuerto.com', rol: 'GESTOR' }
             ];
             localStorage.setItem('usuarios', JSON.stringify(usuarios));
 
             const botonCambiar = document.createElement('button');
             botonCambiar.className = 'btn-cambiar-rol';
-            botonCambiar.setAttribute('data-email', 'admin2@aeropuerto.com');
+            botonCambiar.setAttribute('data-id', '2'); // 🔧 Actualizado a data-id
             botonCambiar.setAttribute('data-rol', 'PÚBLICO');
             document.body.appendChild(botonCambiar); 
 
             botonCambiar.dispatchEvent(new MouseEvent('click', { bubbles: true }));
 
+            await esperarAsincronia(); // ⏳
+
             const bdActualizada = JSON.parse(localStorage.getItem('usuarios'));
-            const usuarioModificado = bdActualizada.find(u => u.email === 'admin2@aeropuerto.com');
+            const usuarioModificado = bdActualizada.find(u => String(u.id) === '2');
             expect(usuarioModificado.rol).toBe('PÚBLICO');
         });
     });
 
     describe('Creación de Datos Básicos', () => {
-        it('debería crear un nuevo Operador correctamente', () => {
+        it('debería crear un nuevo Operador correctamente', async () => {
             document.getElementById('form-add-operador').dispatchEvent(new Event('submit'));
+            
+            await esperarAsincronia(); // ⏳
+            
             const operadores = JSON.parse(localStorage.getItem('operadores'));
             expect(operadores).toHaveLength(1);
             expect(operadores[0].nombre).toBe('Vueling');
         });
 
-        it('debería crear un nuevo Punto correctamente', () => {
+        it('debería crear un nuevo Punto correctamente', async () => {
             document.getElementById('form-add-punto').dispatchEvent(new Event('submit'));
             
-            const puntos = JSON.parse(localStorage.getItem('puntos'));
-            expect(puntos).toHaveLength(3); // ¡Ahora hay 3! (Los 2 de prueba + el nuevo)
+            await esperarAsincronia(); // ⏳
             
-            // Comprobamos el último elemento de la lista (índice 2)
+            const puntos = JSON.parse(localStorage.getItem('puntos'));
+            expect(puntos).toHaveLength(3); 
             expect(puntos[2].codigo).toBe('T1-A5'); 
         });
     });
 
     describe('Edición y Borrado de Operaciones 🛠️', () => {
-        it('debería borrar una Operación si el gestor confirma la acción', () => {
+        it('debería borrar una Operación si el gestor confirma la acción', async () => {
             const opsIniciales = [{ operacionId: "123", codigo: "VLG1" }, { operacionId: "456", codigo: "RYN2" }];
             localStorage.setItem("operaciones", JSON.stringify(opsIniciales));
 
@@ -158,10 +169,13 @@ describe('⚙️ Controlador de Administración (AdminController)', () => {
             document.body.appendChild(btnBorrar);
 
             btnBorrar.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+            
+            await esperarAsincronia(); // ⏳
 
             const opsActualizadas = JSON.parse(localStorage.getItem("operaciones"));
             expect(opsActualizadas).toHaveLength(1);
-            expect(opsActualizadas[0].operacionId).toBe("456");
+            // Validamos que se borró el 123 y quedó el 456
+            expect(opsActualizadas[0].operacionId || opsActualizadas[0].id).toBe("456");
         });
     });
 });
