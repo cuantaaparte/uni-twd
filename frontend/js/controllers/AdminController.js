@@ -65,11 +65,13 @@ export class AdminController {
     async handleAccionesOperacionDOM(e) {
         const btnEditar = e.target.closest(".btn-editar");
         if (btnEditar) {
-            document.getElementById("modal-operacion")?.classList.remove("hidden");
-            
+            // 1. Limpiamos y ponemos el "Cargando..."
             document.getElementById("op-operador").innerHTML = '<option>⏳ Cargando...</option>';
             document.getElementById("op-punto").innerHTML = '<option>⏳ Cargando...</option>';
-
+            document.getElementById("op-estado").innerHTML = '<option>⏳ Cargando...</option>';
+            
+            document.getElementById("modal-operacion")?.classList.remove("hidden");
+            
             try {
                 const [operaciones, operadores, puntos] = await Promise.all([
                     DbOp.getOperaciones(),
@@ -81,8 +83,28 @@ export class AdminController {
                 
                 if (op) {
                     document.getElementById("op-id").value = op.id;
-                    document.getElementById("op-estado").value = op.estado;
                     
+                    // 2. Rellenamos las opciones del select de estado
+                    document.getElementById("op-estado").innerHTML = `
+                        <option value="PROGRAMADO">PROGRAMADO</option>
+                        <option value="EMBARCANDO">EMBARCANDO</option>
+                        <option value="RETRASADO">RETRASADO</option>
+                        <option value="CANCELADO">CANCELADO</option>
+                        <option value="EN RUTA">EN RUTA</option>
+                        <option value="LLEGADO">LLEGADO</option>
+                    `;
+                    
+                    // 3. Selección forzada y normalizada para asegurar que se marca el estado actual
+                    const opciones = document.getElementById("op-estado").options;
+                    const estadoActual = (op.estado || "").trim().toUpperCase();
+                    for (let i = 0; i < opciones.length; i++) {
+                        if (opciones[i].value.trim().toUpperCase() === estadoActual) {
+                            opciones[i].selected = true;
+                            break;
+                        }
+                    }
+                    
+                    // 4. Rellenamos operadores y puntos
                     document.getElementById("op-operador").innerHTML = operadores.map(o => 
                         `<option value="${o.id}" ${String(o.id) === String(op.operadorId) ? 'selected' : ''}>${o.nombre}</option>`
                     ).join("");
@@ -100,7 +122,7 @@ export class AdminController {
         const btnBorrar = e.target.closest(".btn-borrar");
         if (btnBorrar && confirm("⚠️ ¿Deseas borrar definitivamente esta operación?")) {
             const row = e.target.closest(".operacion-row");
-            if(row) row.style.opacity = "0.4"; // Feedback visual instantáneo
+            if(row) row.style.opacity = "0.4";
             await DbOp.deleteOperacion(btnBorrar.getAttribute("data-id"));
             this.onDataChanged();
         }
@@ -161,7 +183,6 @@ export class AdminController {
         const id = btnRol.getAttribute("data-id");
         const nuevoRol = btnRol.getAttribute("data-rol");
         
-        // 👁️ FEEDBACK VISUAL
         const textoOriginal = btnRol.innerText;
         btnRol.innerText = "⏳...";
         btnRol.disabled = true;
@@ -178,14 +199,13 @@ export class AdminController {
             
             const userActivo = JSON.parse(sessionStorage.getItem("usuarioActivo"));
             if (userActivo && String(userActivo.id) === String(id)) {
-                location.reload(); // Si se quita el rol a sí mismo, lo echamos al login
+                location.reload(); 
             } else { 
                 await this.renderizarUsuarios(); 
                 this.onDataChanged(); 
             }
         } catch (error) {
             alert("❌ Error al cambiar el rol: " + error.message);
-            // 🧹 Si algo explota, restauramos el botón
             btnRol.innerText = textoOriginal;
             btnRol.disabled = false;
         }
@@ -228,7 +248,6 @@ export class AdminController {
         const sentido = document.getElementById("crear-sentido").value;
         const ciudad = document.getElementById("crear-ciudad").value;
         
-        // 💡 CONSTRUCCIÓN DEL PAQUETE: Ajustado según el estándar de tu API
         const datosNuevos = {
             tipo: document.getElementById("crear-tipo").value, 
             codigo: document.getElementById("crear-codigo").value,
@@ -238,7 +257,6 @@ export class AdminController {
             horaProgramada: new Date(horaStr).toISOString(),
             horaEstimada: new Date(horaStr).toISOString(),
             estado: "PROGRAMADO", 
-            // Enviamos los IDs como enteros simples, que suele ser lo que espera Slim
             operadorId: parseInt(document.getElementById("crear-operador").value),
             puntoId: parseInt(document.getElementById("crear-punto").value)
         };
