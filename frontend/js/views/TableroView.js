@@ -75,6 +75,9 @@ export class TableroView {
         const nombreOperador = operador ? (operador.nombre || operador.name || "Desconocido") : "Desconocido";
         const codigoPunto = punto ? (punto.codigo || punto.code || punto.name || "---") : "---";
 
+        // ✅ CORRECCIÓN: Reemplazamos el espacio por guion bajo para que el selector CSS sea válido
+        const estadoLimpio = (operacion.estado || "").toLowerCase().replace(" ", "_");
+
         return `
             <article class="operacion-row" data-id="${operacion.operacionId || operacion.id}">
                 <span style="${estiloColorFecha}">${textoFechaHora}</span>
@@ -82,7 +85,7 @@ export class TableroView {
                 <span>${ciudadDestinoOrigen}</span>
                 <span class="operador-info">${htmlIcono} ${nombreOperador}</span>
                 <span>${codigoPunto}</span>
-                <span class="estado-tag state-${(operacion.estado || "").toLowerCase()}">${operacion.estado}</span>
+                <span class="estado-tag state-${estadoLimpio}">${operacion.estado}</span>
                 ${this.#getAccionesGestor(esGestor, operacion.operacionId || operacion.id)} 
             </article>
         `;

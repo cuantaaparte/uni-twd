@@ -219,6 +219,9 @@ export class TableroController {
         const operador = this.datosCache.operadores.find(o => String(o.id) === String(op.operadorId));
         const punto = this.datosCache.puntos.find(p => String(p.id) === String(op.puntoId));
         
+        // 🛡️ CORRECCIÓN: Normalizamos el estado para la clase CSS (espacio -> guion bajo)
+        const estadoCSS = (op.estado || "").toLowerCase().replace(" ", "_");
+        
         document.getElementById("titulo-detalle").innerText = `${op.tipo.toLowerCase() === "tren" ? "🚂" : "✈️"} Detalles de la Operación`;
         document.getElementById("detalle-contenido").innerHTML =/*html*/ `
             <p>🏷️ <strong>Código:</strong> ${op.codigo}</p>
@@ -228,7 +231,11 @@ export class TableroController {
             <p>🚪 <strong>Puerta/Vía:</strong> ${punto ? punto.codigo : 'N/A'}</p>
             <p>🕒 <strong>Hora Programada:</strong> ${new Date(op.horaProgramada).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}</p>
             <p>⏳ <strong>Hora Estimada:</strong> ${new Date(op.horaEstimada).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}</p>
-            <p>🚦 <strong>Estado:</strong> <span class="estado-tag state-${op.estado.toLowerCase()}">${op.estado}</span></p>
+            
+            <p>🚦 <strong>Estado:</strong> 
+                <span class="estado-tag state-${estadoCSS}">${op.estado}</span>
+            </p>
+            
             <hr style="margin: 15px 0; border: 0; border-top: 1px solid var(--border-color);">
             <p style="font-size:0.8rem; color:gray;">🔑 <strong>ID Interno:</strong> ${op.id}</p>
         `;
