@@ -212,21 +212,39 @@ export class AdminController {
     }
 
     async handleBorrarCatalogos(e) {
-        if (e.target.closest(".btn-borrar-operador")) {
-            const id = e.target.closest(".btn-borrar-operador").getAttribute("data-id");
-            document.getElementById("lista-operadores").innerHTML = "<p style='text-align:center;'>⏳ Borrando en servidor...</p>";
-            
-            await DbOp.deleteOperador(id);
-            await this.renderizarOperadores(); 
-            this.onDataChanged();
-        } else if (e.target.closest(".btn-borrar-punto")) {
-            const id = e.target.closest(".btn-borrar-punto").getAttribute("data-id");
-            document.getElementById("lista-puntos").innerHTML = "<p style='text-align:center;'>⏳ Borrando en servidor...</p>";
-            
-            await DbOp.deletePunto(id);
-            await this.renderizarPuntos(); 
-            this.onDataChanged();
+        // Determinamos si es operador o punto
+        const esOperador = e.target.closest(".btn-borrar-operador");
+        const btn = esOperador || e.target.closest(".btn-borrar-punto");
+        const id = btn.getAttribute("data-id");
+        
+        // Indicamos que estamos comprobando
+        const contenedor = esOperador ? document.getElementById("lista-operadores") : document.getElementById("lista-puntos");
+        contenedor.innerHTML = "<p style='text-align:center;'>🔍 Comprobando dependencias...</p>";
+
+        // 1. Cargamos datos para comprobar si el elemento está en uso
+        const todasLasOps = await DbOp.getOperaciones();
+        
+        // 2. Comprobación de seguridad
+        const enUso = esOperador 
+            ? todasLasOps.some(o => String(o.operadorId) === String(id))
+            : todasLasOps.some(o => String(o.puntoId) === String(id));
+
+        if (enUso) {
+            alert("⚠️ No puedes borrar este elemento porque tiene operaciones asignadas.");
+            // Recargamos la vista para quitar el mensaje de "Comprobando"
+            esOperador ? await this.renderizarOperadores() : await this.renderizarPuntos();
+            return;
         }
+
+        // 3. Indicamos que vamos a borrar
+        contenedor.innerHTML = "<p style='text-align:center;'>⏳ Borrando en servidor...</p>";
+        
+        if (esOperador) await DbOp.deleteOperador(id);
+        else await DbOp.deletePunto(id);
+        
+        // 4. Finalizamos
+        esOperador ? await this.renderizarOperadores() : await this.renderizarPuntos();
+        this.onDataChanged();
     }
     // --- Fin Sub-métodos ---
 
