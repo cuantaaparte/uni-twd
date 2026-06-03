@@ -5,7 +5,7 @@ const API_URL = "http://localhost:8000/api/v1";
 export class DbOp {
 
     // ==========================================
-    // 🛠️ MOTOR INTERNO (Limpio y Elegante)
+    //  MOTOR INTERNO 
     // ==========================================
     static async #peticion(endpoint, method = "GET", body = null, customHeaders = {}) {
         const token = sessionStorage.getItem("jwt_token");
@@ -34,7 +34,7 @@ export class DbOp {
     }
 
     // ==========================================
-    // 🔐 AUTENTICACIÓN / SESIÓN
+    //  AUTENTICACIÓN / SESIÓN
     // ==========================================
     static async login(email, password) {
         console.log("🔐 Intentando login con:", email);
@@ -60,9 +60,9 @@ export class DbOp {
 
     static async register(email, password) {
         console.log("📝 Intentando registrar en servidor:", email);
-        sessionStorage.removeItem("jwt_token"); // Matamos tokens zombies por si acaso
+        sessionStorage.removeItem("jwt_token"); 
 
-        // Blindamos el paquete añadiendo username por si el backend es estricto
+        
         const datosUsuario = {
             username: email.split('@')[0], 
             email: email,
@@ -80,7 +80,7 @@ export class DbOp {
     }
 
     // ==========================================
-    // 👥 GESTIÓN DE USUARIOS
+    //  GESTIÓN DE USUARIOS
     // ==========================================
     static async getUsers() {
         const data = await this.#peticion("/users");
@@ -118,7 +118,7 @@ export class DbOp {
     }
 
     // ==========================================
-    // 🏢 CATÁLOGO: OPERADORES
+    //  CATÁLOGO: OPERADORES
     // ==========================================
     static async getOperadores() {
         const data = await this.#peticion("/operators");
@@ -136,7 +136,7 @@ export class DbOp {
     }
 
     // ==========================================
-    // 🚏 CATÁLOGO: PUNTOS (PUERTAS / VÍAS)
+    //  CATÁLOGO: PUNTOS (PUERTAS / VÍAS)
     // ==========================================
     static async getPuntos() {
         const data = await this.#peticion("/spots");
@@ -154,7 +154,7 @@ export class DbOp {
     }
 
     // ==========================================
-    // ✈️ OPERACIONES (VUELOS / TRENES)
+    //  OPERACIONES (VUELOS / TRENES)
     // ==========================================
     static async getOperaciones() {
         const data = await this.#peticion("/operations");

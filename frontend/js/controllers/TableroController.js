@@ -16,7 +16,7 @@ export class TableroController {
         this.initListeners();
     }
 
-    // ✨ AHORA CON TURBO: Las 3 peticiones viajan al mismo tiempo
+    
     async cargarDatos() {
         try {
             const [ops, opers, pts] = await Promise.all([
@@ -119,7 +119,7 @@ export class TableroController {
         modalDetalle?.addEventListener("click", (e) => { if (e.target.id === "modal-detalle") modalDetalle.classList.add("hidden"); });
     }
 
-    // ✨ AHORA ES SÍNCRONA E INSTANTÁNEA (Y tolera mayúsculas/minúsculas)
+    
     aplicarFiltros() { 
         const usuarioActivo = JSON.parse(sessionStorage.getItem("usuarioActivo"));
         
@@ -130,14 +130,14 @@ export class TableroController {
         
         const busqueda = this.inputBusqueda ? this.inputBusqueda.value.trim().toLowerCase() : "";
         
-        // 🛡️ CORRECCIÓN: Convertimos los checkboxes a minúsculas
+        // CORRECCIÓN: Convertimos los checkboxes a minúsculas
         const checkBoxes = document.querySelectorAll(".chk-estado:checked");
         const estadosSeleccionados = checkBoxes.length ? Array.from(checkBoxes).map(c => c.value.toLowerCase()) : ["todos"];
         const mostrarTodos = estadosSeleccionados.includes("todos");
 
         const filtradas = operaciones.filter(op => {
             const coincideBusqueda = (op.codigo || "").toLowerCase().includes(busqueda);
-            // 🛡️ CORRECCIÓN: Convertimos el estado de la base de datos a minúsculas
+            // CORRECCIÓN: Convertimos el estado de la base de datos a minúsculas
             const coincideEstado = mostrarTodos || estadosSeleccionados.includes((op.estado || "").toLowerCase());
             return coincideBusqueda && coincideEstado;
         });
@@ -211,7 +211,7 @@ export class TableroController {
         this.aplicarFiltros();
     }
 
-    // ✨ AHORA ES SÍNCRONA E INSTANTÁNEA (Abre el modal al vuelo)
+    
     mostrarDetalleOperacion(id) { 
         const op = this.datosCache.operaciones.find(o => String(o.id) === String(id));
         if (!op) return;
@@ -219,7 +219,7 @@ export class TableroController {
         const operador = this.datosCache.operadores.find(o => String(o.id) === String(op.operadorId));
         const punto = this.datosCache.puntos.find(p => String(p.id) === String(op.puntoId));
         
-        // 🛡️ CORRECCIÓN: Normalizamos el estado para la clase CSS (espacio -> guion bajo)
+        // CORRECCIÓN: Normalizamos el estado para la clase CSS (espacio -> guion bajo)
         const estadoCSS = (op.estado || "").toLowerCase().replace(" ", "_");
         
         document.getElementById("titulo-detalle").innerText = `${op.tipo.toLowerCase() === "tren" ? "🚂" : "✈️"} Detalles de la Operación`;

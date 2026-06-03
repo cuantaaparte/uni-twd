@@ -35,7 +35,7 @@ export class AuthController {
         const password = document.getElementById("auth-password").value;
         const modoFormulario = e.target.dataset.mode;
         
-        // 👁️ FEEDBACK VISUAL: Atrapamos el botón, guardamos su texto y ponemos el reloj
+        //  FEEDBACK VISUAL: Atrapamos el botón, guardamos su texto y ponemos el reloj
         const btnSubmit = e.target.querySelector('button[type="submit"]');
         const textoOriginal = btnSubmit.innerText;
         btnSubmit.innerText = "⏳ Esperando al servidor...";
@@ -71,7 +71,7 @@ export class AuthController {
         } catch (error) {
             alert("❌ Operación fallida: " + error.message);
         } finally {
-            // 🧹 LIMPIEZA: Pase lo que pase (éxito o error), devolvemos el botón a la normalidad
+            //  LIMPIEZA: Pase lo que pase (éxito o error), devolvemos el botón a la normalidad
             btnSubmit.innerText = textoOriginal;
             btnSubmit.disabled = false;
         }

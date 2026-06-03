@@ -46,7 +46,7 @@ export class Operacion {
         this.horaProgramada = new Date(horaProgramada);
         this.horaEstimada = new Date(horaProgramada); 
         
-        // 🚦 Estado inicial
+        //  Estado inicial
         this.estado = ESTADOS.PROGRAMADO;
 
         

@@ -29,7 +29,6 @@ export class Mappers {
     }
 
     static mapOperacion(apiData) {
-        // 🕵️‍♂️ PERFORADORA MATRIOSHKA: Escarbamos en el doble anidamiento de Docker
         
         // 1. Extraer Operador ID
         let opId = null;
@@ -67,7 +66,6 @@ export class Mappers {
             horaEstimada: apiData.horaEstimada,
             estado: apiData.estado,
             
-            // ✅ IDs reales y extraídos de las profundidades
             operadorId: opId,
             puntoId: ptId,
 
@@ -77,7 +75,7 @@ export class Mappers {
     }
 
     // ==========================================
-    // 🗃️ PROCESADOR DE LISTAS INTELIGENTE
+    //  PROCESADOR DE LISTAS INTELIGENTE
     // ==========================================
     static mapLista(listaApi, funcionTraductora) {
         if (!listaApi) return [];

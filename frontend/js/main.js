@@ -16,25 +16,25 @@ document.addEventListener("DOMContentLoaded", () => {
     // 1. Cargar Base de Datos Semilla
     //inicializarDatos();
 
-    // 🏗️ 2. CONSTRUIR EL DOM (¡Fundamental que vaya aquí!)
+    //  2. CONSTRUIR EL DOM (¡Fundamental que vaya aquí!)
     // Generamos el HTML base y los modales antes de que los controladores los busquen
     new LayoutView();
     new AdminModalsView();
 
-    // 💡 3. INICIAR TEMA (Ahora el DOM ya existe y el botón #checkbox-theme está ahí)
+    //  3. INICIAR TEMA (Ahora el DOM ya existe y el botón #checkbox-theme está ahí)
     ThemeController.init();
 
-    // 📊 4. Iniciar el Tablero Principal (El corazón de la app)
+    //  4. Iniciar el Tablero Principal (El corazón de la app)
     const tableroController = new TableroController();
 
-    // 🔐 5. Iniciar Controladores secundarios pasándoles la función para recargar los datos
+    //  5. Iniciar Controladores secundarios pasándoles la función para recargar los datos
     const authController = new AuthController(() => tableroController.cargarDatos());
     const adminController = new AdminController(() => tableroController.cargarDatos());
 
-    // 🚀 6. Arrancar la máquina pidiendo los datos al servidor
+    //  6. Arrancar la máquina pidiendo los datos al servidor
     tableroController.cargarDatos();
     
-    // 🔄 7. Bucle de refresco automático
+    //  7. Bucle de refresco automático
     setInterval(() => { 
         console.log("Refrescando datos del servidor... 🔄"); 
         tableroController.cargarDatos(); 
